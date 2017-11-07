@@ -4,6 +4,7 @@ import Expect exposing (Expectation)
 import Fuzz exposing (intRange, tuple)
 import Test exposing (..)
 import Array exposing (Array, empty)
+import List exposing (length)
 import Contour exposing (..)
 
 
@@ -66,9 +67,9 @@ suite =
                             , ( 0, 5 )
                             , ( 0, 9 )
                             ]
-                            [ position grid 0
-                            , position grid 55
-                            , position grid 99
+                            [ gridIndex grid 0
+                            , gridIndex grid 55
+                            , gridIndex grid 99
                             ]
             , test "list positions" <|
                 \_ ->
@@ -82,7 +83,7 @@ suite =
                             , ( 0, 1 )
                             , ( 1, 1 )
                             ]
-                            (listPositions grid)
+                            (listGridIndices grid)
             ]
         , describe "GridFunction"
             [ fuzz (tuple ( intRange 0 10, intRange 0 10 )) "zero function" <|
@@ -195,8 +196,8 @@ suite =
                             [ [ 0, 1, 4, 3 ]
                             , [ 4, 5, 8, 7 ]
                             ]
-                            [ corners boxes 0
-                            , corners boxes 3
+                            [ corners2 boxes 0
+                            , corners2 boxes 3
                             ]
             , test "classify one square" <|
                 \_ ->
@@ -239,5 +240,103 @@ suite =
                                 ]
                             )
                             (.values <| classifySquares gfun 5)
+            , test "classified squares" <|
+                \_ ->
+                    Expect.equal
+                        [ segmentsByClass 15
+                        , segmentsByClass 14
+                        , segmentsByClass 13
+                        , segmentsByClass 12
+                        , segmentsByClass 11
+                        , segmentsByClass 9
+                        , segmentsByClass 8
+                        ]
+                        [ segmentsByClass 0
+                        , segmentsByClass 1
+                        , segmentsByClass 2
+                        , segmentsByClass 3
+                        , segmentsByClass 4
+                        , segmentsByClass 6
+                        , segmentsByClass 7
+                        ]
+            , test "classified squares, more" <|
+                \_ ->
+                    Expect.equal
+                        [ 2
+                        , 2
+                        , 0
+                        , 1
+                        ]
+                        [ length <| segmentsByClass 10
+                        , length <| segmentsByClass 5
+                        , length <| segmentsByClass 0
+                        , length <| segmentsByClass 1
+                        ]
+            , test "zero at" <|
+                \_ ->
+                    Expect.equal
+                        [ 0.5
+                        , 0.25
+                        ]
+                        [ zeroAt -1 1
+                        , zeroAt -1 3
+                        ]
+            , test "zero on edge" <|
+                \_ ->
+                    let
+                        grid =
+                            { min = ( 0, 0 ), max = ( 1, 1 ), steps = 1 }
+
+                        gfun =
+                            { grid = grid
+                            , values =
+                                Array.fromList
+                                    [ -1
+                                    , 3
+                                    , 3
+                                    , -1
+                                    ]
+                            }
+                    in
+                        Expect.equal
+                            [ -1
+                            , 3
+                            , 0.25
+                            , 0.75
+                            , 0.25
+                            , 0.75
+                            ]
+                            [ valueAt gfun ( 0, 0 )
+                            , valueAt gfun ( 0, 1 )
+                            , zeroOnEdgeAt gfun 0 (Edge (Corner 0) (Corner 1))
+                            , zeroOnEdgeAt gfun 0 (Edge (Corner 1) (Corner 2))
+                            , zeroOnEdgeAt gfun 0 (Edge (Corner 2) (Corner 3))
+                            , zeroOnEdgeAt gfun 0 (Edge (Corner 3) (Corner 0))
+                            ]
+            , test "segment offset" <|
+                \_ ->
+                    Expect.equal
+                        [ Line ( 0.5, 0.0 ) ( 1.0, 0.5 )
+                        , Line ( 1.0, 0.5 ) ( 0.5, 1.0 )
+                        ]
+                        [ segmentLineOffset (Segment (edge 0) (edge 1))
+                        , segmentLineOffset (Segment (edge 1) (edge 2))
+                        ]
+            , test "segment line" <|
+                \_ ->
+                    let
+                        grid =
+                            { min = ( 0, 0 ), max = ( 1, 1 ), steps = 1 }
+
+                        sqs =
+                            squares grid
+                    in
+                        Expect.equal
+                            [ Line ( 0.5, 0.0 ) ( 1.0, 0.5 )
+                            , Line ( 1.0, 0.5 ) ( 0.5, 1.0 )
+                            ]
+                            [ segmentLine sqs 0 (Segment (edge 0) (edge 1))
+                            , segmentLine sqs 0 (Segment (edge 1) (edge 2))
+                            ]
             ]
         ]

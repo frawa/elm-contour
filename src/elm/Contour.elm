@@ -6,7 +6,7 @@ import List exposing (map, range)
 import Bitwise exposing (or, shiftLeftBy)
 
 
-type alias Position =
+type alias GridIndex =
     ( Int, Int )
 
 
@@ -16,8 +16,8 @@ type alias Point =
 
 type alias Grid =
     { steps : Int
-    , min : Position
-    , max : Position
+    , min : GridIndex
+    , max : GridIndex
     }
 
 
@@ -66,7 +66,7 @@ gridSize grid =
     (dimensionSize grid) ^ 2
 
 
-point : Grid -> Position -> Point
+point : Grid -> GridIndex -> Point
 point grid ( i, j ) =
     let
         ( hx, hy ) =
@@ -75,7 +75,7 @@ point grid ( i, j ) =
         ( (toFloat i) * hx, (toFloat j) * hy )
 
 
-index : Grid -> Position -> Int
+index : Grid -> GridIndex -> Int
 index grid ( i, j ) =
     let
         n =
@@ -84,8 +84,8 @@ index grid ( i, j ) =
         j * n + i
 
 
-position : Grid -> Int -> Position
-position grid index =
+gridIndex : Grid -> Int -> GridIndex
+gridIndex grid index =
     let
         n =
             dimensionSize grid
@@ -93,12 +93,17 @@ position grid index =
         ( index % n, index // n )
 
 
-listPositions : Grid -> List Position
-listPositions grid =
-    List.map (position grid) <| range 0 ((gridSize grid) - 1)
+squareIndex : Squares -> Int -> GridIndex
+squareIndex =
+    gridIndex
 
 
-valueAt : GridFunction -> Position -> Float
+listGridIndices : Grid -> List GridIndex
+listGridIndices grid =
+    List.map (gridIndex grid) <| range 0 ((gridSize grid) - 1)
+
+
+valueAt : GridFunction -> GridIndex -> Float
 valueAt gfun coor =
     withDefault 0 <|
         value gfun (index (.grid gfun) coor)
@@ -111,7 +116,7 @@ value gfun index =
 
 gridFunction : Grid -> (Point -> Float) -> GridFunction
 gridFunction grid f =
-    { grid = grid, values = fromList <| List.map (f << (point grid)) (listPositions grid) }
+    { grid = grid, values = fromList <| List.map (f << (point grid)) (listGridIndices grid) }
 
 
 markLevel : GridFunction -> Float -> GridValues Int
@@ -141,11 +146,11 @@ squareCornerIndex squares i =
         grid =
             { squares | steps = squares.steps + 1 }
     in
-        index grid <| position squares i
+        index grid <| gridIndex squares i
 
 
-corners : Squares -> Int -> List Int
-corners squares index =
+corners2 : Squares -> Int -> List Int
+corners2 squares index =
     let
         n =
             dimensionSize squares + 1
@@ -173,16 +178,265 @@ classifySquares gfun level =
             markLevel gfun level
 
         squares_ =
-                squares <|
-                    .grid marked
+            squares <|
+                .grid marked
     in
         { marked
             | grid = squares_
             , values =
-                listPositions squares_
+                listGridIndices squares_
                     |> List.map (index squares_)
-                    |> List.map (corners squares_)
+                    |> List.map (corners2 squares_)
                     |> List.map (\corners -> List.map (value marked) corners |> List.map (withDefault 0))
                     |> List.map classify
                     |> fromList
         }
+
+
+
+-- corners of a square
+--
+-- 3 -- 2
+-- |    |
+-- 0 -- 1
+--
+--
+-- edges of a square
+--
+-- + -- 2 -- +
+-- |         |
+-- 3         1
+-- |         |
+-- + -- 0 -- +
+--
+-- segments of a square
+-- (are the two edges cut by a contour)
+--
+-- see https://en.wikipedia.org/wiki/Marching_squares
+
+
+type Corner
+    = Corner Int
+
+
+type Edge
+    = Edge Corner Corner
+
+
+edge : Int -> Edge
+edge i =
+    case i of
+        0 ->
+            Edge (Corner 0) (Corner 1)
+
+        1 ->
+            Edge (Corner 1) (Corner 2)
+
+        2 ->
+            Edge (Corner 2) (Corner 3)
+
+        3 ->
+            Edge (Corner 3) (Corner 0)
+
+        _ ->
+            Debug.crash "unknonw edge"
+
+
+
+-- edges : Array Edge
+-- edges =
+--     fromList [ edge 0 0, edge 0 1, edge 1 1, edge 1 0 ]
+-- (!) : Array a -> Int -> a
+-- (!) arr i =
+--     withDefault get i arr
+-- infixr 9 !
+
+
+type Segment
+    = Segment Edge Edge
+
+
+segmentsByClass : Int -> List Segment
+segmentsByClass class =
+    case class of
+        0 ->
+            []
+
+        15 ->
+            []
+
+        1 ->
+            [ Segment (edge 0) (edge 3) ]
+
+        14 ->
+            [ Segment (edge 0) (edge 3) ]
+
+        2 ->
+            [ Segment (edge 0) (edge 1) ]
+
+        13 ->
+            [ Segment (edge 0) (edge 1) ]
+
+        3 ->
+            [ Segment (edge 1) (edge 3) ]
+
+        12 ->
+            [ Segment (edge 1) (edge 3) ]
+
+        4 ->
+            [ Segment (edge 1) (edge 2) ]
+
+        11 ->
+            [ Segment (edge 1) (edge 2) ]
+
+        5 ->
+            [ Segment (edge 0) (edge 1), Segment (edge 2) (edge 3) ]
+
+        6 ->
+            [ Segment (edge 0) (edge 2) ]
+
+        9 ->
+            [ Segment (edge 0) (edge 2) ]
+
+        7 ->
+            [ Segment (edge 2) (edge 3) ]
+
+        8 ->
+            [ Segment (edge 2) (edge 3) ]
+
+        10 ->
+            [ Segment (edge 0) (edge 3), Segment (edge 1) (edge 2) ]
+
+        _ ->
+            Debug.crash "unknown class"
+
+
+cornerGridIndex : Squares -> Int -> Corner -> GridIndex
+cornerGridIndex squares square corner =
+    let
+        index =
+            squareCornerIndex squares square
+
+        ( i, j ) =
+            case corner of
+                Corner 0 ->
+                    ( 0, 0 )
+
+                Corner 1 ->
+                    ( 0, 1 )
+
+                Corner 2 ->
+                    ( 1, 1 )
+
+                Corner 3 ->
+                    ( 1, 0 )
+
+                _ ->
+                    Debug.crash "unknown corner"
+    in
+        ( index + i, index + j )
+
+
+zeroOnEdgeAt : GridFunction -> Int -> Edge -> Float
+zeroOnEdgeAt gfun square edge =
+    case edge of
+        Edge corner1 corner2 ->
+            let
+                sqs =
+                    squares gfun.grid
+
+                a =
+                    valueAt gfun (cornerGridIndex sqs square corner1)
+
+                b =
+                    valueAt gfun (cornerGridIndex sqs square corner2)
+            in
+                zeroAt a b
+
+
+
+-- solution of f x = 0
+-- where f 0 = a, f 1 = b
+
+
+zeroAt : Float -> Float -> Float
+zeroAt a b =
+    -a / (b - a)
+
+
+type Line
+    = Line Point Point
+
+
+segmentLineOffset : Segment -> Line
+segmentLineOffset segment =
+    case segment of
+        Segment edge1 edge2 ->
+            Line (edgeMidPointOffset edge1) (edgeMidPointOffset edge2)
+
+
+edgeMidPointOffset : Edge -> Point
+edgeMidPointOffset edge =
+    case edge of
+        Edge corner1 corner2 ->
+            midPointOffset corner1 corner2
+
+
+midPointOffset : Corner -> Corner -> Point
+midPointOffset corner1 corner2 =
+    let
+        ( x1, y1 ) =
+            cornerOffset corner1
+
+        ( x2, y2 ) =
+            cornerOffset corner2
+    in
+        ( mid x1 x2, mid y1 y2 )
+
+
+cornerOffset : Corner -> Point
+cornerOffset corner =
+    case corner of
+        Corner 0 ->
+            ( 0, 0 )
+
+        Corner 1 ->
+            ( 1, 0 )
+
+        Corner 2 ->
+            ( 1, 1 )
+
+        Corner 3 ->
+            ( 0, 1 )
+
+        _ ->
+            Debug.crash "unknown corner"
+
+
+mid : Float -> Float -> Float
+mid x y =
+    (x + y) / 2
+
+
+segmentLine : Squares -> Int -> Segment -> Line
+segmentLine squares square segment =
+    let
+        grid =
+            { squares | steps = squares.steps + 1 }
+    in
+        squareCornerIndex squares square
+            |> gridIndex grid
+            |> point grid
+            |> offsetLine (stepSize grid) (segmentLineOffset segment)
+
+
+offsetLine : Point -> Line -> Point -> Line
+offsetLine h line p =
+    case line of
+        Line p1 p2 ->
+            Line (offsetPoint p h p1) (offsetPoint p h p2)
+
+
+offsetPoint : Point -> Point -> Point -> Point
+offsetPoint ( x, y ) ( hx, hy ) ( ox, oy ) =
+    ( x + hx * ox, y + hy * oy )
