@@ -334,9 +334,29 @@ suite =
                         Expect.equal
                             [ Line ( 0.5, 0.0 ) ( 1.0, 0.5 )
                             , Line ( 1.0, 0.5 ) ( 0.5, 1.0 )
+                            , Line ( 0.5, 1.0 ) ( 0.0, 0.5 )
+                            , Line ( 0.0, 0.5 ) ( 0.5, 0.0 )
                             ]
                             [ segmentLine sqs 0 (Segment (edge 0) (edge 1))
                             , segmentLine sqs 0 (Segment (edge 1) (edge 2))
+                            , segmentLine sqs 0 (Segment (edge 2) (edge 3))
+                            , segmentLine sqs 0 (Segment (edge 3) (edge 0))
+                            ]
+            , test "segment line finer" <|
+                \_ ->
+                    let
+                        grid =
+                            { min = ( 0, 0 ), max = ( 1, 1 ), steps = 2 }
+
+                        sqs =
+                            squares grid
+                    in
+                        Expect.equal
+                            [ Line ( 0.75, 0.0 ) ( 1.0, 0.25 )
+                            , Line ( 0.5, 0.75 ) ( 0.25, 1.0 )
+                            ]
+                            [ segmentLine sqs 1 (Segment (edge 0) (edge 1))
+                            , segmentLine sqs 2 (Segment (edge 1) (edge 2))
                             ]
             ]
         ]
