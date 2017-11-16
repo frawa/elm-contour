@@ -1,8 +1,8 @@
 module Contour exposing (..)
 
-import Array exposing (Array, get, fromList, map, foldl)
+import Array exposing (Array, get, fromList, map, foldl, toList)
 import Maybe exposing (withDefault)
-import List exposing (map, range)
+import List exposing (map, range, concatMap)
 import Bitwise exposing (or, shiftLeftBy)
 
 
@@ -112,6 +112,16 @@ valueAt gfun coor =
 value : GridValues a -> Int -> Maybe a
 value gfun index =
     get index (.values gfun)
+
+
+gridMapIndexed : (Int -> a -> b) -> GridValues a -> GridValues b
+gridMapIndexed f gvals =
+    { gvals | values = Array.fromList <| List.map (uncurry f) <| Array.toIndexedList gvals.values }
+
+
+gridMap : (a -> b) -> GridValues a -> GridValues b
+gridMap f gvals =
+    { gvals | values = Array.map f gvals.values }
 
 
 gridFunction : Grid -> (Point -> Float) -> GridFunction
@@ -440,3 +450,25 @@ offsetLine h line p =
 offsetPoint : Point -> Point -> Point -> Point
 offsetPoint ( x, y ) ( hx, hy ) ( ox, oy ) =
     ( x + hx * ox, y + hy * oy )
+
+
+contourLines : GridFunction -> Float -> List Line
+contourLines gfun level =
+    let
+        classified =
+            classifySquares gfun level
+
+        segments =
+            gridMap segmentsByClass classified
+
+        toLine =
+            segmentLine segments.grid
+
+        toLines =
+            \i ->
+                List.map (toLine i)
+
+        lines =
+            gridMapIndexed toLines segments
+    in
+        concatMap identity <| toList <| .values lines

@@ -358,5 +358,18 @@ suite =
                             [ segmentLine sqs 1 (Segment (edge 0) (edge 1))
                             , segmentLine sqs 2 (Segment (edge 1) (edge 2))
                             ]
+            , test "coutour lines" <|
+                \_ ->
+                    let
+                        grid =
+                            { min = ( 0, 0 ), max = ( 1, 1 ), steps = 3 }
+
+                        gfun =
+                            gridFunction grid (\( x, y ) -> x * y)
+
+                        lines =
+                            contourLines gfun 0.0
+                    in
+                        Expect.equal [] [ lines ]
             ]
         ]
