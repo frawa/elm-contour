@@ -1,11 +1,8 @@
 module Plot exposing (..)
 
 import Html exposing (Html, Attribute, beginnerProgram, div, input)
-
-
--- import Html.Attributes exposing (..)
--- import Html.Events exposing (onInput)
-
+import Html.Attributes as H exposing (..)
+import Html.Events exposing (on, onInput)
 import Collage exposing (..)
 import Element exposing (..)
 import Text exposing (..)
@@ -22,15 +19,27 @@ main =
 
 
 type alias Model =
-    { gfun : GridFunction
+    { steps : Int
+    , contours : Int
+    , levelMin : Float
+    , levelMax : Float
     }
 
 
 model : Model
 model =
+    { steps = 40
+    , contours = 5
+    , levelMin = 0
+    , levelMax = 1
+    }
+
+
+modelGridFunction : Model -> GridFunction
+modelGridFunction model =
     let
         grid =
-            { min = ( 0, 0 ), max = ( 1, 1 ), steps = 80 }
+            { min = ( 0, 0 ), max = ( 1, 1 ), steps = model.steps }
 
         f =
             \( x, y ) -> x * y
@@ -41,8 +50,7 @@ model =
         f3 =
             \( x, y ) -> 2 * x ^ (y - 8)
     in
-        { gfun = gridFunction grid f2
-        }
+        gridFunction grid f2
 
 
 
@@ -51,10 +59,40 @@ model =
 
 type Msg
     = Nop Model
+    | UpdateGridSteps String
+    | UpdateContours String
+    | UpdateLevelMin String
+    | UpdateLevelMax String
 
 
-update (Nop model) oldContent =
-    model
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        Nop _ ->
+            model
+
+        UpdateGridSteps val ->
+            { model | steps = Result.withDefault 0 <| String.toInt <| val }
+
+        UpdateContours val ->
+            { model | contours = Result.withDefault 0 <| String.toInt <| val }
+
+        UpdateLevelMin val ->
+            let
+                newVal =
+                    Result.withDefault 0 <| String.toFloat <| val
+            in
+                { model
+                    | levelMin = newVal
+                    , levelMax = Basics.max model.levelMax newVal
+                }
+
+        UpdateLevelMax val ->
+            let
+                newVal =
+                    Result.withDefault 1 <| String.toFloat <| val
+            in
+                { model | levelMax = newVal, levelMin = Basics.min model.levelMin newVal }
 
 
 
@@ -69,14 +107,25 @@ myHeight =
     500
 
 
+view : Model -> Html Msg
 view model =
+    div []
+        [ slider "Grid Size" (toString model.steps) 2 100 UpdateGridSteps
+        , slider "Contours" (toString model.contours) 0 80 UpdateContours
+        , slider "Level min" (toString model.levelMin) -5 5 UpdateLevelMin
+        , slider "Level max" (toString model.levelMax) -5 5 UpdateLevelMax
+        , allContours model
+        ]
+
+
+allContours : Model -> Html Msg
+allContours model =
     toHtml <|
         collage
             (2 * myWidth)
             (2 * myHeight)
             [ -- , traced (solid Color.blue) <| segment ( 100, 100 ) ( 200, 200 )
-              contour model 0.8
-            , contours model 0 1 50
+              contours model model.levelMin model.levelMax model.contours
             , text <| fromString "Hello"
             ]
 
@@ -105,11 +154,14 @@ tracePath =
 contour : Model -> Float -> Form
 contour model level =
     let
+        gfun =
+            modelGridFunction model
+
         sqs =
-            squares model.gfun.grid
+            squares gfun.grid
 
         lines =
-            contourLines model.gfun level
+            contourLines gfun level
     in
         group <| List.map (lineToPath >> tracePath) lines
 
@@ -127,3 +179,19 @@ contours model min max steps =
             List.map (contour model) <|
                 List.map level <|
                     List.range 0 (steps - 1)
+
+
+slider : String -> String -> Int -> Int -> (String -> Msg) -> Html Msg
+slider title val min max update =
+    div []
+        [ Html.text <| title
+        , input
+            [ type_ "range"
+            , H.min <| toString min
+            , H.max <| toString max
+            , H.value val
+            , onInput update
+            ]
+            []
+        , Html.text <| val
+        ]
