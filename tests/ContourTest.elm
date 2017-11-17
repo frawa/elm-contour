@@ -201,7 +201,14 @@ suite =
                             ]
             , test "classify one square" <|
                 \_ ->
-                    Expect.equal [ 0, 8, 4, 2, 1, 15 ]
+                    Expect.equal
+                        [ 0
+                        , 1
+                        , 2
+                        , 4
+                        , 8
+                        , 15
+                        ]
                         [ classify [ 0, 0, 0, 0 ]
                         , classify [ 1, 0, 0, 0 ]
                         , classify [ 0, 1, 0, 0 ]
@@ -233,10 +240,10 @@ suite =
                     in
                         Expect.equal
                             (Array.fromList
-                                [ 2
-                                , 1
-                                , 4
+                                [ 4
                                 , 8
+                                , 2
+                                , 1
                                 ]
                             )
                             (.values <| classifySquares gfun 5)

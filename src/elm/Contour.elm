@@ -173,7 +173,7 @@ corners2 squares index =
 
 classify : List Int -> Int
 classify marked =
-    List.foldl
+    List.foldr
         (\mark acc ->
             or mark (shiftLeftBy 1 acc)
         )
