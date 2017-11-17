@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Plot exposing (..)
 
 import Html exposing (Html, Attribute, beginnerProgram, div, input)
 
@@ -30,13 +30,16 @@ model : Model
 model =
     let
         grid =
-            { min = ( 0, 0 ), max = ( 1, 1 ), steps = 40 }
+            { min = ( 0, 0 ), max = ( 1, 1 ), steps = 80 }
 
         f =
             \( x, y ) -> x * y
 
         f2 =
-            \( x, y ) -> 1.5 - e ^ ((x - 0.5) ^ 2 + (y - 0.5) ^ 2)
+            \( x, y ) -> e ^ (-((x - 0.5) ^ 2 + (y - 0.5) ^ 2))
+
+        f3 =
+            \( x, y ) -> 2 * x ^ (y - 8)
     in
         { gfun = gridFunction grid f2
         }
@@ -59,20 +62,22 @@ update (Nop model) oldContent =
 
 
 myWidth =
-    1500
+    500
 
 
 myHeight =
-    1000
+    500
 
 
 view model =
     toHtml <|
-        collage myWidth
-            myHeight
-            [ text <| fromString "Hello"
-              -- , traced (solid Color.blue) <| segment ( 100, 100 ) ( 200, 200 )
-            , contour model
+        collage
+            (2 * myWidth)
+            (2 * myHeight)
+            [ -- , traced (solid Color.blue) <| segment ( 100, 100 ) ( 200, 200 )
+              contour model 0.8
+            , contours model 0 1 50
+            , text <| fromString "Hello"
             ]
 
 
@@ -97,13 +102,28 @@ tracePath =
     traced (solid Color.blue)
 
 
-contour : Model -> Form
-contour model =
+contour : Model -> Float -> Form
+contour model level =
     let
         sqs =
             squares model.gfun.grid
 
         lines =
-            contourLines model.gfun 0
+            contourLines model.gfun level
     in
         group <| List.map (lineToPath >> tracePath) lines
+
+
+contours : Model -> Float -> Float -> Int -> Form
+contours model min max steps =
+    let
+        delta =
+            (max - min) / toFloat steps
+
+        level =
+            \i -> min + toFloat i * delta
+    in
+        group <|
+            List.map (contour model) <|
+                List.map level <|
+                    List.range 0 (steps - 1)
