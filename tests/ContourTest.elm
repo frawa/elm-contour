@@ -1,11 +1,15 @@
 module ContourTest exposing (..)
 
-import Expect exposing (Expectation)
-import Fuzz exposing (intRange, tuple)
-import Test exposing (..)
 import Array exposing (Array, empty)
-import List exposing (length)
 import Contour exposing (..)
+import Expect exposing (Expectation, FloatingPointTolerance(..))
+import Fuzz exposing (intRange, tuple)
+import List exposing (length)
+import Test exposing (..)
+
+
+eps =
+    Absolute 1.0e-4
 
 
 suite : Test
@@ -18,72 +22,72 @@ suite =
                         grid =
                             { min = ( 0, 0 ), max = ( 1, 1 ), steps = 10 }
                     in
-                        Expect.all
-                            [ Expect.equal 10 << .steps
-                            , Expect.equal ( 0, 0 ) << .min
-                            , Expect.equal ( 1, 1 ) << .max
-                            , Expect.equal ( 0.1, 0.1 ) << stepSize
-                            , Expect.equal 121 << gridSize
-                            ]
-                            grid
+                    Expect.all
+                        [ Expect.equal 10 << .steps
+                        , Expect.equal ( 0, 0 ) << .min
+                        , Expect.equal ( 1, 1 ) << .max
+                        , Expect.equal ( 0.1, 0.1 ) << stepSize
+                        , Expect.equal 121 << gridSize
+                        ]
+                        grid
             , test "points" <|
                 \_ ->
                     let
                         grid =
                             { min = ( 0, 0 ), max = ( 1, 1 ), steps = 10 }
                     in
-                        Expect.equal
-                            [ ( 0.0, 0.0 )
-                            , ( 0.5, 0.5 )
-                            , ( 1.0, 1.0 )
-                            ]
-                            [ point grid ( 0, 0 )
-                            , point grid ( 5, 5 )
-                            , point grid ( 10, 10 )
-                            ]
+                    Expect.equal
+                        [ ( 0.0, 0.0 )
+                        , ( 0.5, 0.5 )
+                        , ( 1.0, 1.0 )
+                        ]
+                        [ point grid ( 0, 0 )
+                        , point grid ( 5, 5 )
+                        , point grid ( 10, 10 )
+                        ]
             , test "index" <|
                 \_ ->
                     let
                         grid =
                             { min = ( 0, 0 ), max = ( 1, 1 ), steps = 10 }
                     in
-                        Expect.equal
-                            [ 0
-                            , 60
-                            , 108
-                            ]
-                            [ index grid ( 0, 0 )
-                            , index grid ( 5, 5 )
-                            , index grid ( 9, 9 )
-                            ]
+                    Expect.equal
+                        [ 0
+                        , 60
+                        , 108
+                        ]
+                        [ index grid ( 0, 0 )
+                        , index grid ( 5, 5 )
+                        , index grid ( 9, 9 )
+                        ]
             , test "position" <|
                 \_ ->
                     let
                         grid =
                             { min = ( 0, 0 ), max = ( 1, 1 ), steps = 10 }
                     in
-                        Expect.equal
-                            [ ( 0, 0 )
-                            , ( 0, 5 )
-                            , ( 0, 9 )
-                            ]
-                            [ gridIndex grid 0
-                            , gridIndex grid 55
-                            , gridIndex grid 99
-                            ]
+                    Expect.equal
+                        [ ( 0, 0 )
+                        , ( 0, 5 )
+                        , ( 0, 9 )
+                        ]
+                        [ gridIndex grid 0
+                        , gridIndex grid 55
+                        , gridIndex grid 99
+                        ]
             , test "list positions" <|
                 \_ ->
                     let
                         grid =
                             { min = ( 0, 0 ), max = ( 1, 1 ), steps = 1 }
                     in
-                        Expect.equal
-                            [ ( 0, 0 )
-                            , ( 1, 0 )
-                            , ( 0, 1 )
-                            , ( 1, 1 )
-                            ]
-                            (listGridIndices grid)
+                    Expect.equal
+                        [ ( 0, 0 )
+                        , ( 1, 0 )
+                        , ( 0, 1 )
+                        , ( 1, 1 )
+                        ]
+                        (listGridIndices grid)
             ]
         , describe "GridFunction"
             [ fuzz (tuple ( intRange 0 10, intRange 0 10 )) "zero function" <|
@@ -95,7 +99,7 @@ suite =
                         gfun =
                             { grid = grid, values = empty }
                     in
-                        Expect.equal 0 (valueAt gfun pos)
+                    Expect.equal 0 (valueAt gfun pos)
             , fuzz (tuple ( intRange 0 10, intRange 0 10 )) "simple function" <|
                 \pos ->
                     let
@@ -108,7 +112,9 @@ suite =
                         gfun =
                             gridFunction grid f
                     in
-                        Expect.equal (f (point grid pos)) (valueAt gfun pos)
+                    Expect.within eps
+                        (f (point grid pos))
+                        (valueAt gfun pos)
             , fuzz (tuple ( intRange 0 10, intRange 0 10 )) "simple function by index" <|
                 \pos ->
                     let
@@ -121,7 +127,9 @@ suite =
                         gfun =
                             gridFunction grid f
                     in
-                        Expect.equal (f (point grid pos)) (value gfun (index grid pos) |> Maybe.withDefault 0)
+                    Expect.within eps
+                        (f (point grid pos))
+                        (value gfun (index grid pos) |> Maybe.withDefault 0)
             ]
         , describe "marching squares"
             [ test "mark level" <|
@@ -146,27 +154,27 @@ suite =
                                     ]
                             }
                     in
-                        Expect.equal
-                            (Array.fromList
-                                [ 0
-                                , 0
-                                , 0
-                                , 0
-                                , 1
-                                , 0
-                                , 0
-                                , 0
-                                , 0
-                                ]
-                            )
-                            (.values <| markLevel gfun 5)
+                    Expect.equal
+                        (Array.fromList
+                            [ 0
+                            , 0
+                            , 0
+                            , 0
+                            , 1
+                            , 0
+                            , 0
+                            , 0
+                            , 0
+                            ]
+                        )
+                        (.values <| markLevel gfun 5)
             , test "squares" <|
                 \_ ->
                     let
                         grid =
                             { min = ( 0, 0 ), max = ( 1, 1 ), steps = 2 }
                     in
-                        Expect.equal { grid | steps = 1 } (squares grid)
+                    Expect.equal { grid | steps = 1 } (squares grid)
             , test "a squares corner index in the grid" <|
                 \_ ->
                     let
@@ -176,13 +184,13 @@ suite =
                         boxes =
                             squares grid
                     in
-                        Expect.equal
-                            [ 0
-                            , 4
-                            ]
-                            [ squareCornerIndex boxes 0
-                            , squareCornerIndex boxes 3
-                            ]
+                    Expect.equal
+                        [ 0
+                        , 4
+                        ]
+                        [ squareCornerIndex boxes 0
+                        , squareCornerIndex boxes 3
+                        ]
             , test "corners" <|
                 \_ ->
                     let
@@ -192,13 +200,13 @@ suite =
                         boxes =
                             squares grid
                     in
-                        Expect.equal
-                            [ [ 0, 1, 4, 3 ]
-                            , [ 4, 5, 8, 7 ]
-                            ]
-                            [ corners2 boxes 0
-                            , corners2 boxes 3
-                            ]
+                    Expect.equal
+                        [ [ 0, 1, 4, 3 ]
+                        , [ 4, 5, 8, 7 ]
+                        ]
+                        [ corners2 boxes 0
+                        , corners2 boxes 3
+                        ]
             , test "classify one square" <|
                 \_ ->
                     Expect.equal
@@ -238,15 +246,15 @@ suite =
                                     ]
                             }
                     in
-                        Expect.equal
-                            (Array.fromList
-                                [ 4
-                                , 8
-                                , 2
-                                , 1
-                                ]
-                            )
-                            (.values <| classifySquares gfun 5)
+                    Expect.equal
+                        (Array.fromList
+                            [ 4
+                            , 8
+                            , 2
+                            , 1
+                            ]
+                        )
+                        (.values <| classifySquares gfun 5)
             , test "classified squares" <|
                 \_ ->
                     Expect.equal
@@ -305,21 +313,21 @@ suite =
                                     ]
                             }
                     in
-                        Expect.equal
-                            [ -1
-                            , 3
-                            , 0.25
-                            , 0.75
-                            , 0.25
-                            , 0.75
-                            ]
-                            [ valueAt gfun ( 0, 0 )
-                            , valueAt gfun ( 0, 1 )
-                            , zeroOnEdgeAt gfun 0 (Edge (Corner 0) (Corner 1))
-                            , zeroOnEdgeAt gfun 0 (Edge (Corner 1) (Corner 2))
-                            , zeroOnEdgeAt gfun 0 (Edge (Corner 2) (Corner 3))
-                            , zeroOnEdgeAt gfun 0 (Edge (Corner 3) (Corner 0))
-                            ]
+                    Expect.equal
+                        [ -1
+                        , 3
+                        , 0.25
+                        , 0.75
+                        , 0.25
+                        , 0.75
+                        ]
+                        [ valueAt gfun ( 0, 0 )
+                        , valueAt gfun ( 0, 1 )
+                        , zeroOnEdgeAt gfun 0 (Edge (Corner 0) (Corner 1))
+                        , zeroOnEdgeAt gfun 0 (Edge (Corner 1) (Corner 2))
+                        , zeroOnEdgeAt gfun 0 (Edge (Corner 2) (Corner 3))
+                        , zeroOnEdgeAt gfun 0 (Edge (Corner 3) (Corner 0))
+                        ]
             , test "segment offset" <|
                 \_ ->
                     Expect.equal
@@ -338,17 +346,17 @@ suite =
                         sqs =
                             squares grid
                     in
-                        Expect.equal
-                            [ Line ( 0.5, 0.0 ) ( 1.0, 0.5 )
-                            , Line ( 1.0, 0.5 ) ( 0.5, 1.0 )
-                            , Line ( 0.5, 1.0 ) ( 0.0, 0.5 )
-                            , Line ( 0.0, 0.5 ) ( 0.5, 0.0 )
-                            ]
-                            [ segmentLine sqs 0 (Segment (edge 0) (edge 1))
-                            , segmentLine sqs 0 (Segment (edge 1) (edge 2))
-                            , segmentLine sqs 0 (Segment (edge 2) (edge 3))
-                            , segmentLine sqs 0 (Segment (edge 3) (edge 0))
-                            ]
+                    Expect.equal
+                        [ Line ( 0.5, 0.0 ) ( 1.0, 0.5 )
+                        , Line ( 1.0, 0.5 ) ( 0.5, 1.0 )
+                        , Line ( 0.5, 1.0 ) ( 0.0, 0.5 )
+                        , Line ( 0.0, 0.5 ) ( 0.5, 0.0 )
+                        ]
+                        [ segmentLine sqs 0 (Segment (edge 0) (edge 1))
+                        , segmentLine sqs 0 (Segment (edge 1) (edge 2))
+                        , segmentLine sqs 0 (Segment (edge 2) (edge 3))
+                        , segmentLine sqs 0 (Segment (edge 3) (edge 0))
+                        ]
             , test "segment line finer" <|
                 \_ ->
                     let
@@ -358,14 +366,14 @@ suite =
                         sqs =
                             squares grid
                     in
-                        Expect.equal
-                            [ Line ( 0.75, 0.0 ) ( 1.0, 0.25 )
-                            , Line ( 0.5, 0.75 ) ( 0.25, 1.0 )
-                            ]
-                            [ segmentLine sqs 1 (Segment (edge 0) (edge 1))
-                            , segmentLine sqs 2 (Segment (edge 1) (edge 2))
-                            ]
-            , test "coutour lines" <|
+                    Expect.equal
+                        [ Line ( 0.75, 0.0 ) ( 1.0, 0.25 )
+                        , Line ( 0.5, 0.75 ) ( 0.25, 1.0 )
+                        ]
+                        [ segmentLine sqs 1 (Segment (edge 0) (edge 1))
+                        , segmentLine sqs 2 (Segment (edge 1) (edge 2))
+                        ]
+            , test "contour lines" <|
                 \_ ->
                     let
                         grid =
@@ -377,6 +385,14 @@ suite =
                         lines =
                             contourLines gfun 0.0
                     in
-                        Expect.equal [] [ lines ]
+                    Expect.equal
+                        [ [ Line ( 0.3333333333333333, 0.16666666666666666 ) ( 0.16666666666666666, 0.3333333333333333 )
+                          , Line ( 0.6666666666666666, 0.16666666666666666 ) ( 0.3333333333333333, 0.16666666666666666 )
+                          , Line ( 1, 0.16666666666666666 ) ( 0.6666666666666666, 0.16666666666666666 )
+                          , Line ( 0.16666666666666666, 0.3333333333333333 ) ( 0.16666666666666666, 0.6666666666666666 )
+                          , Line ( 0.16666666666666666, 0.6666666666666666 ) ( 0.16666666666666666, 1 )
+                          ]
+                        ]
+                        [ lines ]
             ]
         ]

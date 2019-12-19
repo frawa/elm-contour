@@ -1,9 +1,9 @@
 module Contour exposing (..)
 
-import Array exposing (Array, get, fromList, map, foldl, toList)
-import Maybe exposing (withDefault)
-import List exposing (map, range, concatMap)
+import Array exposing (Array, foldl, fromList, get, map, toList)
 import Bitwise exposing (or, shiftLeftBy)
+import List exposing (concatMap, map, range)
+import Maybe exposing (withDefault)
 
 
 type alias GridIndex =
@@ -53,17 +53,17 @@ stepSize grid =
         height =
             toFloat <| ymax - ymin
     in
-        ( width / n, height / n )
+    ( width / n, height / n )
 
 
 dimensionSize : Grid -> Int
 dimensionSize grid =
-    (.steps grid + 1)
+    .steps grid + 1
 
 
 gridSize : Grid -> Int
 gridSize grid =
-    (dimensionSize grid) ^ 2
+    dimensionSize grid ^ 2
 
 
 point : Grid -> GridIndex -> Point
@@ -72,7 +72,7 @@ point grid ( i, j ) =
         ( hx, hy ) =
             stepSize grid
     in
-        ( (toFloat i) * hx, (toFloat j) * hy )
+    ( toFloat i * hx, toFloat j * hy )
 
 
 index : Grid -> GridIndex -> Int
@@ -81,16 +81,16 @@ index grid ( i, j ) =
         n =
             dimensionSize grid
     in
-        j * n + i
+    j * n + i
 
 
 gridIndex : Grid -> Int -> GridIndex
-gridIndex grid index =
+gridIndex grid index1 =
     let
         n =
             dimensionSize grid
     in
-        ( index % n, index // n )
+    ( modBy n index1, index1 // n )
 
 
 squareIndex : Squares -> Int -> GridIndex
@@ -100,7 +100,7 @@ squareIndex =
 
 listGridIndices : Grid -> List GridIndex
 listGridIndices grid =
-    List.map (gridIndex grid) <| range 0 ((gridSize grid) - 1)
+    List.map (gridIndex grid) <| range 0 (gridSize grid - 1)
 
 
 valueAt : GridFunction -> GridIndex -> Float
@@ -110,38 +110,43 @@ valueAt gfun coor =
 
 
 value : GridValues a -> Int -> Maybe a
-value gfun index =
-    get index (.values gfun)
+value gfun index1 =
+    get index1 (.values gfun)
 
 
 gridMapIndexed : (Int -> a -> b) -> GridValues a -> GridValues b
 gridMapIndexed f gvals =
-    { gvals | values = Array.fromList <| List.map (uncurry f) <| Array.toIndexedList gvals.values }
+    { grid = gvals.grid
+    , values = Array.fromList <| List.map (\( a, b ) -> f a b) <| Array.toIndexedList gvals.values
+    }
 
 
 gridMap : (a -> b) -> GridValues a -> GridValues b
 gridMap f gvals =
-    { gvals | values = Array.map f gvals.values }
+    { grid = gvals.grid
+    , values = Array.map f gvals.values
+    }
 
 
 gridFunction : Grid -> (Point -> Float) -> GridFunction
 gridFunction grid f =
-    { grid = grid, values = fromList <| List.map (f << (point grid)) (listGridIndices grid) }
+    { grid = grid, values = fromList <| List.map (f << point grid) (listGridIndices grid) }
 
 
 markLevel : GridFunction -> Float -> GridValues Int
 markLevel gfun level =
-    { gfun
-        | values =
-            Array.map
-                (\more ->
-                    if more then
-                        1
-                    else
-                        0
-                )
-            <|
-                Array.map ((<) level) gfun.values
+    { grid = gfun.grid
+    , values =
+        Array.map
+            (\more ->
+                if more then
+                    1
+
+                else
+                    0
+            )
+        <|
+            Array.map ((<) level) gfun.values
     }
 
 
@@ -151,24 +156,24 @@ squares grid =
 
 
 squareCornerIndex : Squares -> Int -> Int
-squareCornerIndex squares i =
+squareCornerIndex squares1 i =
     let
         grid =
-            { squares | steps = squares.steps + 1 }
+            { squares1 | steps = squares1.steps + 1 }
     in
-        index grid <| gridIndex squares i
+    index grid <| gridIndex squares1 i
 
 
 corners2 : Squares -> Int -> List Int
-corners2 squares index =
+corners2 squares1 index1 =
     let
         n =
-            dimensionSize squares + 1
+            dimensionSize squares1 + 1
 
         corner =
-            squareCornerIndex squares index
+            squareCornerIndex squares1 index1
     in
-        [ corner, corner + 1, corner + n + 1, corner + n ]
+    [ corner, corner + 1, corner + n + 1, corner + n ]
 
 
 classify : List Int -> Int
@@ -191,16 +196,16 @@ classifySquares gfun level =
             squares <|
                 .grid marked
     in
-        { marked
-            | grid = squares_
-            , values =
-                listGridIndices squares_
-                    |> List.map (index squares_)
-                    |> List.map (corners2 squares_)
-                    |> List.map (\corners -> List.map (value marked) corners |> List.map (withDefault 0))
-                    |> List.map classify
-                    |> fromList
-        }
+    { marked
+        | grid = squares_
+        , values =
+            listGridIndices squares_
+                |> List.map (index squares_)
+                |> List.map (corners2 squares_)
+                |> List.map (\corners -> List.map (value marked) corners |> List.map (withDefault 0))
+                |> List.map classify
+                |> fromList
+    }
 
 
 
@@ -248,8 +253,9 @@ edge i =
         3 ->
             Edge (Corner 3) (Corner 0)
 
+        -- make impossible
         _ ->
-            Debug.crash "unknonw edge"
+            Edge (Corner 0) (Corner 1)
 
 
 
@@ -317,15 +323,16 @@ segmentsByClass class =
         10 ->
             [ Segment (edge 0) (edge 3), Segment (edge 1) (edge 2) ]
 
+        -- make impossible
         _ ->
-            Debug.crash "unknown class"
+            []
 
 
 cornerGridIndex : Squares -> Int -> Corner -> GridIndex
-cornerGridIndex squares square corner =
+cornerGridIndex squares1 square corner =
     let
-        index =
-            squareCornerIndex squares square
+        index1 =
+            squareCornerIndex squares1 square
 
         ( i, j ) =
             case corner of
@@ -341,15 +348,16 @@ cornerGridIndex squares square corner =
                 Corner 3 ->
                     ( 1, 0 )
 
+                -- make impossible
                 _ ->
-                    Debug.crash "unknown corner"
+                    ( 0, 0 )
     in
-        ( index + i, index + j )
+    ( index1 + i, index1 + j )
 
 
 zeroOnEdgeAt : GridFunction -> Int -> Edge -> Float
-zeroOnEdgeAt gfun square edge =
-    case edge of
+zeroOnEdgeAt gfun square edge1 =
+    case edge1 of
         Edge corner1 corner2 ->
             let
                 sqs =
@@ -361,7 +369,7 @@ zeroOnEdgeAt gfun square edge =
                 b =
                     valueAt gfun (cornerGridIndex sqs square corner2)
             in
-                zeroAt a b
+            zeroAt a b
 
 
 
@@ -386,8 +394,8 @@ segmentLineOffset segment =
 
 
 edgeMidPointOffset : Edge -> Point
-edgeMidPointOffset edge =
-    case edge of
+edgeMidPointOffset edge1 =
+    case edge1 of
         Edge corner1 corner2 ->
             midPointOffset corner1 corner2
 
@@ -401,7 +409,7 @@ midPointOffset corner1 corner2 =
         ( x2, y2 ) =
             cornerOffset corner2
     in
-        ( mid x1 x2, mid y1 y2 )
+    ( mid x1 x2, mid y1 y2 )
 
 
 cornerOffset : Corner -> Point
@@ -419,8 +427,9 @@ cornerOffset corner =
         Corner 3 ->
             ( 0, 1 )
 
+        -- make impossible
         _ ->
-            Debug.crash "unknown corner"
+            ( 0, 0 )
 
 
 mid : Float -> Float -> Float
@@ -429,15 +438,15 @@ mid x y =
 
 
 segmentLine : Squares -> Int -> Segment -> Line
-segmentLine squares square segment =
+segmentLine squares1 square segment =
     let
         grid =
-            { squares | steps = squares.steps + 1 }
+            { squares1 | steps = squares1.steps + 1 }
     in
-        squareCornerIndex squares square
-            |> gridIndex grid
-            |> point grid
-            |> offsetLine (stepSize grid) (segmentLineOffset segment)
+    squareCornerIndex squares1 square
+        |> gridIndex grid
+        |> point grid
+        |> offsetLine (stepSize grid) (segmentLineOffset segment)
 
 
 offsetLine : Point -> Line -> Point -> Line
@@ -471,4 +480,4 @@ contourLines gfun level =
         lines =
             gridMapIndexed toLines segments
     in
-        concatMap identity <| toList <| .values lines
+    concatMap identity <| toList <| .values lines

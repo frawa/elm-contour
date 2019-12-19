@@ -1,17 +1,19 @@
 module Plot exposing (..)
 
-import Html exposing (Html, Attribute, beginnerProgram, div, input)
-import Html.Attributes as H exposing (..)
-import Html.Events exposing (on, onInput)
+import Browser
 import Collage exposing (..)
-import Element exposing (..)
-import Text exposing (..)
-import Color exposing (..)
-import Contour exposing (..)
+import Collage.Layout exposing (vertical)
+import Collage.Render exposing (svgBox)
+import Collage.Text exposing (fromString)
+import Contour exposing (GridFunction, Line, contourLines, gridFunction, squares)
+import Html exposing (Attribute, Html, div, input)
+import Html.Attributes as H exposing (..)
+import Html.Events exposing (onInput)
+import String exposing (fromFloat, fromInt)
 
 
 main =
-    beginnerProgram { model = model, view = view, update = update }
+    Browser.sandbox { init = model0, view = view, update = update }
 
 
 
@@ -26,8 +28,8 @@ type alias Model =
     }
 
 
-model : Model
-model =
+model0 : Model
+model0 =
     { steps = 40
     , contours = 5
     , levelMin = 0
@@ -45,12 +47,12 @@ modelGridFunction model =
             \( x, y ) -> x * y
 
         f2 =
-            \( x, y ) -> e ^ (-((x - 0.5) ^ 2 + (y - 0.5) ^ 2))
+            \( x, y ) -> e ^ -((x - 0.5) ^ 2 + (y - 0.5) ^ 2)
 
         f3 =
             \( x, y ) -> 2 * x ^ (y - 8)
     in
-        gridFunction grid f2
+    gridFunction grid f2
 
 
 
@@ -72,27 +74,27 @@ update msg model =
             model
 
         UpdateGridSteps val ->
-            { model | steps = Result.withDefault 0 <| String.toInt <| val }
+            { model | steps = Maybe.withDefault 0 <| String.toInt <| val }
 
         UpdateContours val ->
-            { model | contours = Result.withDefault 0 <| String.toInt <| val }
+            { model | contours = Maybe.withDefault 0 <| String.toInt <| val }
 
         UpdateLevelMin val ->
             let
                 newVal =
-                    Result.withDefault 0 <| String.toFloat <| val
+                    Maybe.withDefault 0 <| String.toFloat <| val
             in
-                { model
-                    | levelMin = newVal
-                    , levelMax = Basics.max model.levelMax newVal
-                }
+            { model
+                | levelMin = newVal
+                , levelMax = Basics.max model.levelMax newVal
+            }
 
         UpdateLevelMax val ->
             let
                 newVal =
-                    Result.withDefault 1 <| String.toFloat <| val
+                    Maybe.withDefault 1 <| String.toFloat <| val
             in
-                { model | levelMax = newVal, levelMin = Basics.min model.levelMin newVal }
+            { model | levelMax = newVal, levelMin = Basics.min model.levelMin newVal }
 
 
 
@@ -110,23 +112,21 @@ myHeight =
 view : Model -> Html Msg
 view model =
     div []
-        [ slider "Grid Size" (toString model.steps) 2 100 UpdateGridSteps
-        , slider "Contours" (toString model.contours) 0 80 UpdateContours
-        , slider "Level min" (toString model.levelMin) -5 5 UpdateLevelMin
-        , slider "Level max" (toString model.levelMax) -5 5 UpdateLevelMax
+        [ slider "Grid Size" (fromInt model.steps) 2 100 UpdateGridSteps
+        , slider "Contours" (fromInt model.contours) 0 80 UpdateContours
+        , slider "Level min" (fromFloat model.levelMin) -5 5 UpdateLevelMin
+        , slider "Level max" (fromFloat model.levelMax) -5 5 UpdateLevelMax
         , allContours model
         ]
 
 
 allContours : Model -> Html Msg
 allContours model =
-    toHtml <|
-        collage
-            (2 * myWidth)
-            (2 * myHeight)
+    svgBox ( 2 * myWidth, 2 * myHeight ) <|
+        vertical
             [ -- , traced (solid Color.blue) <| segment ( 100, 100 ) ( 200, 200 )
               contours model model.levelMin model.levelMax model.contours
-            , text <| fromString "Hello"
+            , rendered <| fromString "Hello"
             ]
 
 
@@ -141,17 +141,17 @@ lineToPath line =
         scale =
             scaled ( myWidth, myHeight )
     in
-        case line of
-            Line p1 p2 ->
-                segment (scale p1) (scale p2)
+    case line of
+        Contour.Line p1 p2 ->
+            segment (scale p1) (scale p2)
 
 
-tracePath : Path -> Form
+tracePath : Path -> Collage msg
 tracePath =
-    traced (solid Color.blue)
+    traced defaultLineStyle
 
 
-contour : Model -> Float -> Form
+contour : Model -> Float -> Collage msg
 contour model level =
     let
         gfun =
@@ -163,10 +163,10 @@ contour model level =
         lines =
             contourLines gfun level
     in
-        group <| List.map (lineToPath >> tracePath) lines
+    group <| List.map (lineToPath >> tracePath) lines
 
 
-contours : Model -> Float -> Float -> Int -> Form
+contours : Model -> Float -> Float -> Int -> Collage msg
 contours model min max steps =
     let
         delta =
@@ -175,22 +175,22 @@ contours model min max steps =
         level =
             \i -> min + toFloat i * delta
     in
-        group <|
-            List.map (contour model) <|
-                List.map level <|
-                    List.range 0 (steps - 1)
+    group <|
+        List.map (contour model) <|
+            List.map level <|
+                List.range 0 (steps - 1)
 
 
 slider : String -> String -> Int -> Int -> (String -> Msg) -> Html Msg
-slider title val min max update =
+slider title val min max update1 =
     div []
         [ Html.text <| title
         , input
             [ type_ "range"
-            , H.min <| toString min
-            , H.max <| toString max
+            , H.min <| fromInt min
+            , H.max <| fromInt max
             , H.value val
-            , onInput update
+            , onInput update1
             ]
             []
         , Html.text <| val
