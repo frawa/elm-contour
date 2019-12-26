@@ -323,10 +323,10 @@ suite =
                         ]
                         [ valueAt gfun ( 0, 0 )
                         , valueAt gfun ( 0, 1 )
-                        , zeroOnEdgeAt gfun 0 (Edge Corner0 Corner1)
-                        , zeroOnEdgeAt gfun 0 (Edge Corner1 Corner2)
-                        , zeroOnEdgeAt gfun 0 (Edge Corner2 Corner3)
-                        , zeroOnEdgeAt gfun 0 (Edge Corner3 Corner0)
+                        , zeroOnEdgeAt gfun 0 Edge0
+                        , zeroOnEdgeAt gfun 0 Edge1
+                        , zeroOnEdgeAt gfun 0 Edge2
+                        , zeroOnEdgeAt gfun 0 Edge3
                         ]
             , test "segment offset" <|
                 \_ ->
@@ -334,8 +334,8 @@ suite =
                         [ Line ( 0.5, 0.0 ) ( 1.0, 0.5 )
                         , Line ( 1.0, 0.5 ) ( 0.5, 1.0 )
                         ]
-                        [ segmentLineOffset (Segment (edge 0) (edge 1))
-                        , segmentLineOffset (Segment (edge 1) (edge 2))
+                        [ segmentLineOffset (Segment Edge0 Edge1)
+                        , segmentLineOffset (Segment Edge1 Edge2)
                         ]
             , test "segment line" <|
                 \_ ->
@@ -352,10 +352,10 @@ suite =
                         , Line ( 0.5, 1.0 ) ( 0.0, 0.5 )
                         , Line ( 0.0, 0.5 ) ( 0.5, 0.0 )
                         ]
-                        [ segmentLine sqs 0 (Segment (edge 0) (edge 1))
-                        , segmentLine sqs 0 (Segment (edge 1) (edge 2))
-                        , segmentLine sqs 0 (Segment (edge 2) (edge 3))
-                        , segmentLine sqs 0 (Segment (edge 3) (edge 0))
+                        [ segmentLine sqs 0 (Segment Edge0 Edge1)
+                        , segmentLine sqs 0 (Segment Edge1 Edge2)
+                        , segmentLine sqs 0 (Segment Edge2 Edge3)
+                        , segmentLine sqs 0 (Segment Edge3 Edge0)
                         ]
             , test "segment line finer" <|
                 \_ ->
@@ -370,8 +370,8 @@ suite =
                         [ Line ( 0.75, 0.0 ) ( 1.0, 0.25 )
                         , Line ( 0.5, 0.75 ) ( 0.25, 1.0 )
                         ]
-                        [ segmentLine sqs 1 (Segment (edge 0) (edge 1))
-                        , segmentLine sqs 2 (Segment (edge 1) (edge 2))
+                        [ segmentLine sqs 1 (Segment Edge0 Edge1)
+                        , segmentLine sqs 2 (Segment Edge1 Edge2)
                         ]
             , test "contour lines" <|
                 \_ ->

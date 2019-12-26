@@ -197,7 +197,7 @@ classifySquares gfun level =
             listGridIndices squares_
                 |> List.map (index squares_)
                 |> List.map (corners2 squares_)
-                |> List.map (\corners -> List.map (value marked) corners |> List.map (withDefault 0))
+                |> List.map (\corners1 -> List.map (value marked) corners1 |> List.map (withDefault 0))
                 |> List.map classify
                 |> fromList
     }
@@ -233,27 +233,26 @@ type Corner
 
 
 type Edge
-    = Edge Corner Corner
+    = Edge0
+    | Edge1
+    | Edge2
+    | Edge3
 
 
-edge : Int -> Edge
-edge i =
-    case i of
-        0 ->
-            Edge Corner0 Corner1
+corners : Edge -> ( Corner, Corner )
+corners edge1 =
+    case edge1 of
+        Edge0 ->
+            ( Corner0, Corner1 )
 
-        1 ->
-            Edge Corner1 Corner2
+        Edge1 ->
+            ( Corner1, Corner2 )
 
-        2 ->
-            Edge Corner2 Corner3
+        Edge2 ->
+            ( Corner2, Corner3 )
 
-        3 ->
-            Edge Corner3 Corner0
-
-        -- make impossible
-        _ ->
-            Edge Corner0 Corner0
+        Edge3 ->
+            ( Corner3, Corner0 )
 
 
 
@@ -280,46 +279,46 @@ segmentsByClass class =
             []
 
         1 ->
-            [ Segment (edge 0) (edge 3) ]
+            [ Segment Edge0 Edge3 ]
 
         14 ->
-            [ Segment (edge 0) (edge 3) ]
+            [ Segment Edge0 Edge3 ]
 
         2 ->
-            [ Segment (edge 0) (edge 1) ]
+            [ Segment Edge0 Edge1 ]
 
         13 ->
-            [ Segment (edge 0) (edge 1) ]
+            [ Segment Edge0 Edge1 ]
 
         3 ->
-            [ Segment (edge 1) (edge 3) ]
+            [ Segment Edge1 Edge3 ]
 
         12 ->
-            [ Segment (edge 1) (edge 3) ]
+            [ Segment Edge1 Edge3 ]
 
         4 ->
-            [ Segment (edge 1) (edge 2) ]
+            [ Segment Edge1 Edge2 ]
 
         11 ->
-            [ Segment (edge 1) (edge 2) ]
+            [ Segment Edge1 Edge2 ]
 
         5 ->
-            [ Segment (edge 0) (edge 1), Segment (edge 2) (edge 3) ]
+            [ Segment Edge0 Edge1, Segment Edge2 Edge3 ]
 
         6 ->
-            [ Segment (edge 0) (edge 2) ]
+            [ Segment Edge0 Edge2 ]
 
         9 ->
-            [ Segment (edge 0) (edge 2) ]
+            [ Segment Edge0 Edge2 ]
 
         7 ->
-            [ Segment (edge 2) (edge 3) ]
+            [ Segment Edge2 Edge3 ]
 
         8 ->
-            [ Segment (edge 2) (edge 3) ]
+            [ Segment Edge2 Edge3 ]
 
         10 ->
-            [ Segment (edge 0) (edge 3), Segment (edge 1) (edge 2) ]
+            [ Segment Edge0 Edge3, Segment Edge1 Edge2 ]
 
         -- make impossible
         _ ->
@@ -351,19 +350,20 @@ cornerGridIndex squares1 square corner =
 
 zeroOnEdgeAt : GridFunction -> Int -> Edge -> Float
 zeroOnEdgeAt gfun square edge1 =
-    case edge1 of
-        Edge corner1 corner2 ->
-            let
-                sqs =
-                    squares gfun.grid
+    let
+        ( corner1, corner2 ) =
+            corners edge1
 
-                a =
-                    valueAt gfun (cornerGridIndex sqs square corner1)
+        sqs =
+            squares gfun.grid
 
-                b =
-                    valueAt gfun (cornerGridIndex sqs square corner2)
-            in
-            zeroAt a b
+        a =
+            valueAt gfun (cornerGridIndex sqs square corner1)
+
+        b =
+            valueAt gfun (cornerGridIndex sqs square corner2)
+    in
+    zeroAt a b
 
 
 
@@ -389,9 +389,11 @@ segmentLineOffset segment =
 
 edgeMidPointOffset : Edge -> Point
 edgeMidPointOffset edge1 =
-    case edge1 of
-        Edge corner1 corner2 ->
-            midPointOffset corner1 corner2
+    let
+        ( corner1, corner2 ) =
+            corners edge1
+    in
+    midPointOffset corner1 corner2
 
 
 midPointOffset : Corner -> Corner -> Point
