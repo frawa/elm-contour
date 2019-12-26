@@ -323,10 +323,10 @@ suite =
                         ]
                         [ valueAt gfun ( 0, 0 )
                         , valueAt gfun ( 0, 1 )
-                        , zeroOnEdgeAt gfun 0 (Edge (Corner 0) (Corner 1))
-                        , zeroOnEdgeAt gfun 0 (Edge (Corner 1) (Corner 2))
-                        , zeroOnEdgeAt gfun 0 (Edge (Corner 2) (Corner 3))
-                        , zeroOnEdgeAt gfun 0 (Edge (Corner 3) (Corner 0))
+                        , zeroOnEdgeAt gfun 0 (Edge Corner0 Corner1)
+                        , zeroOnEdgeAt gfun 0 (Edge Corner1 Corner2)
+                        , zeroOnEdgeAt gfun 0 (Edge Corner2 Corner3)
+                        , zeroOnEdgeAt gfun 0 (Edge Corner3 Corner0)
                         ]
             , test "segment offset" <|
                 \_ ->

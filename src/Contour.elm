@@ -226,7 +226,10 @@ classifySquares gfun level =
 
 
 type Corner
-    = Corner Int
+    = Corner0
+    | Corner1
+    | Corner2
+    | Corner3
 
 
 type Edge
@@ -237,20 +240,20 @@ edge : Int -> Edge
 edge i =
     case i of
         0 ->
-            Edge (Corner 0) (Corner 1)
+            Edge Corner0 Corner1
 
         1 ->
-            Edge (Corner 1) (Corner 2)
+            Edge Corner1 Corner2
 
         2 ->
-            Edge (Corner 2) (Corner 3)
+            Edge Corner2 Corner3
 
         3 ->
-            Edge (Corner 3) (Corner 0)
+            Edge Corner3 Corner0
 
         -- make impossible
         _ ->
-            Edge (Corner 0) (Corner 1)
+            Edge Corner0 Corner0
 
 
 
@@ -331,21 +334,17 @@ cornerGridIndex squares1 square corner =
 
         ( i, j ) =
             case corner of
-                Corner 0 ->
+                Corner0 ->
                     ( 0, 0 )
 
-                Corner 1 ->
+                Corner1 ->
                     ( 0, 1 )
 
-                Corner 2 ->
+                Corner2 ->
                     ( 1, 1 )
 
-                Corner 3 ->
+                Corner3 ->
                     ( 1, 0 )
-
-                -- make impossible
-                _ ->
-                    ( 0, 0 )
     in
     ( index1 + i, index1 + j )
 
@@ -410,21 +409,17 @@ midPointOffset corner1 corner2 =
 cornerOffset : Corner -> Point
 cornerOffset corner =
     case corner of
-        Corner 0 ->
+        Corner0 ->
             ( 0, 0 )
 
-        Corner 1 ->
+        Corner1 ->
             ( 1, 0 )
 
-        Corner 2 ->
+        Corner2 ->
             ( 1, 1 )
 
-        Corner 3 ->
+        Corner3 ->
             ( 0, 1 )
-
-        -- make impossible
-        _ ->
-            ( 0, 0 )
 
 
 mid : Float -> Float -> Float
