@@ -26,7 +26,7 @@ suite =
                         [ Expect.equal 10 << .steps
                         , Expect.equal ( 0, 0 ) << .min
                         , Expect.equal ( 1, 1 ) << .max
-                        , Expect.equal ( 0.1, 0.1 ) << stepSize
+                        , Expect.equal (Step 0.1 0.1) << stepSize
                         , Expect.equal 121 << gridSize
                         ]
                         grid

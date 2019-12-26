@@ -77,7 +77,7 @@ gridSize grid =
 point : Grid -> GridIndex -> Point
 point grid ( i, j ) =
     let
-        Step hx hy  =
+        (Step hx hy) =
             stepSize grid
     in
     ( toFloat i * hx, toFloat j * hy )
@@ -449,15 +449,15 @@ segmentLine squares1 square segment =
         |> offsetLine (stepSize grid) (segmentLineOffset segment)
 
 
-offsetLine : Point -> Line -> Point -> Line
-offsetLine h line p =
+offsetLine : Step -> Line -> Point -> Line
+offsetLine step line p =
     case line of
         Line p1 p2 ->
-            Line (offsetPoint p h p1) (offsetPoint p h p2)
+            Line (offsetPoint p step p1) (offsetPoint p step p2)
 
 
-offsetPoint : Point -> Point -> Point -> Point
-offsetPoint ( x, y ) ( hx, hy ) ( ox, oy ) =
+offsetPoint : Point -> Step -> Point -> Point
+offsetPoint ( x, y ) (Step hx hy) ( ox, oy ) =
     ( x + hx * ox, y + hy * oy )
 
 
