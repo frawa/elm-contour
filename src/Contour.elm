@@ -338,13 +338,13 @@ cornerGridIndex squares1 square corner =
                     ( 0, 0 )
 
                 Corner1 ->
-                    ( 0, 1 )
+                    ( 1, 0 )
 
                 Corner2 ->
                     ( 1, 1 )
 
                 Corner3 ->
-                    ( 1, 0 )
+                    ( 0, 1 )
     in
     ( index1 + i, index1 + j )
 
