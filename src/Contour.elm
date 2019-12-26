@@ -136,17 +136,19 @@ markLevel : GridFunction -> Float -> GridValues Int
 markLevel gfun level =
     { grid = gfun.grid
     , values =
-        Array.map
-            (\more ->
-                if more then
-                    1
-
-                else
-                    0
-            )
-        <|
-            Array.map ((<) level) gfun.values
+        gfun.values
+            |> Array.map ((<) level)
+            |> Array.map boolToInt
     }
+
+
+boolToInt : Bool -> Int
+boolToInt val =
+    if val then
+        1
+
+    else
+        0
 
 
 squares : Grid -> Squares
