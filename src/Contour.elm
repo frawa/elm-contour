@@ -18,10 +18,6 @@ type StepSize
     = Step Float Float
 
 
-type RelativePoint
-    = RelativePoint Float Float
-
-
 type alias Grid =
     { steps : Int
     , min : GridIndex
@@ -388,48 +384,56 @@ type Line
     = Line Point Point
 
 
-segmentLineOffset : Segment -> Line
-segmentLineOffset segment =
+type RelativeLine
+    = RelativeLine RelativePoint RelativePoint
+
+
+type RelativePoint
+    = RelativePoint Float Float
+
+
+segmentRelativeLine : Segment -> RelativeLine
+segmentRelativeLine segment =
     case segment of
         Segment edge1 edge2 ->
-            Line (edgeMidPointOffset edge1) (edgeMidPointOffset edge2)
+            RelativeLine (edgeMidPoint edge1) (edgeMidPoint edge2)
 
 
-edgeMidPointOffset : Edge -> Point
-edgeMidPointOffset edge1 =
+edgeMidPoint : Edge -> RelativePoint
+edgeMidPoint edge1 =
     let
         ( corner1, corner2 ) =
             corners edge1
     in
-    midPointOffset corner1 corner2
+    midPoint corner1 corner2
 
 
-midPointOffset : Corner -> Corner -> Point
-midPointOffset corner1 corner2 =
+midPoint : Corner -> Corner -> RelativePoint
+midPoint corner1 corner2 =
     let
-        ( x1, y1 ) =
+        (RelativePoint x1 y1) =
             cornerOffset corner1
 
-        ( x2, y2 ) =
+        (RelativePoint x2 y2) =
             cornerOffset corner2
     in
-    ( mid x1 x2, mid y1 y2 )
+    RelativePoint (mid x1 x2) (mid y1 y2)
 
 
-cornerOffset : Corner -> Point
+cornerOffset : Corner -> RelativePoint
 cornerOffset corner =
     case corner of
         Corner0 ->
-            ( 0, 0 )
+            RelativePoint 0 0
 
         Corner1 ->
-            ( 1, 0 )
+            RelativePoint 1 0
 
         Corner2 ->
-            ( 1, 1 )
+            RelativePoint 1 1
 
         Corner3 ->
-            ( 0, 1 )
+            RelativePoint 0 1
 
 
 mid : Float -> Float -> Float
@@ -446,19 +450,17 @@ segmentLine squares1 square segment =
     squareCornerIndex squares1 square
         |> gridIndex grid
         |> point grid
-        |> offsetLine (stepSize grid) (segmentLineOffset segment)
+        |> absoluteLine (stepSize grid) (segmentRelativeLine segment)
 
 
-offsetLine : StepSize -> Line -> Point -> Line
-offsetLine step line p =
-    case line of
-        Line p1 p2 ->
-            Line (offsetPoint p step p1) (offsetPoint p step p2)
+absoluteLine : StepSize -> RelativeLine -> Point -> Line
+absoluteLine step (RelativeLine rp1 rp2) p =
+    Line (absolutePoint step rp1 p) (absolutePoint step rp2 p)
 
 
-offsetPoint : Point -> StepSize -> Point -> Point
-offsetPoint ( x, y ) (Step hx hy) ( ox, oy ) =
-    ( x + hx * ox, y + hy * oy )
+absolutePoint : StepSize -> RelativePoint -> Point -> Point
+absolutePoint (Step hx hy) (RelativePoint rx ry) ( x, y ) =
+    ( x + hx * rx, y + hy * ry )
 
 
 contourLines : GridFunction -> Float -> List Line
