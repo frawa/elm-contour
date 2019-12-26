@@ -159,8 +159,8 @@ squareCornerIndex squares1 i =
     index grid <| gridIndex squares1 i
 
 
-corners2 : Squares -> Int -> List Int
-corners2 squares1 index1 =
+cornersIndices : Squares -> Int -> List Int
+cornersIndices squares1 index1 =
     let
         n =
             dimensionSize squares1 + 1
@@ -196,7 +196,7 @@ classifySquares gfun level =
         , values =
             listGridIndices squares_
                 |> List.map (index squares_)
-                |> List.map (corners2 squares_)
+                |> List.map (cornersIndices squares_)
                 |> List.map (\corners1 -> List.map (value marked) corners1 |> List.map (withDefault 0))
                 |> List.map classify
                 |> fromList

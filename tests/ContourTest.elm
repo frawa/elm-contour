@@ -204,8 +204,8 @@ suite =
                         [ [ 0, 1, 4, 3 ]
                         , [ 4, 5, 8, 7 ]
                         ]
-                        [ corners2 boxes 0
-                        , corners2 boxes 3
+                        [ cornersIndices boxes 0
+                        , cornersIndices boxes 3
                         ]
             , test "classify one square" <|
                 \_ ->
