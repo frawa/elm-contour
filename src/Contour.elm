@@ -93,11 +93,6 @@ gridIndex grid index1 =
     ( modBy n index1, index1 // n )
 
 
-squareIndex : Squares -> Int -> GridIndex
-squareIndex =
-    gridIndex
-
-
 listGridIndices : Grid -> List GridIndex
 listGridIndices grid =
     List.map (gridIndex grid) <| range 0 (gridSize grid - 1)
