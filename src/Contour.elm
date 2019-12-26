@@ -392,11 +392,11 @@ type RelativePoint
     = RelativePoint Float Float
 
 
-segmentRelativeLine : Segment -> RelativeLine
-segmentRelativeLine segment =
+segmentRelativeLine : (Edge -> RelativePoint) -> Segment -> RelativeLine
+segmentRelativeLine getPoint segment =
     case segment of
         Segment edge1 edge2 ->
-            RelativeLine (edgeMidPoint edge1) (edgeMidPoint edge2)
+            RelativeLine (getPoint edge1) (getPoint edge2)
 
 
 edgeMidPoint : Edge -> RelativePoint
@@ -450,7 +450,7 @@ segmentLineForSquare squares1 square segment =
     squareCornerIndex squares1 square
         |> gridIndex grid
         |> point grid
-        |> absoluteLine (stepSize grid) (segmentRelativeLine segment)
+        |> absoluteLine (stepSize grid) (segmentRelativeLine edgeMidPoint segment)
 
 
 absoluteLine : StepSize -> RelativeLine -> Point -> Line

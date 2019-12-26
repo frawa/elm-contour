@@ -334,8 +334,8 @@ suite =
                         [ RelativeLine (RelativePoint 0.5 0.0) (RelativePoint 1.0 0.5)
                         , RelativeLine (RelativePoint 1.0 0.5) (RelativePoint 0.5 1.0)
                         ]
-                        [ segmentRelativeLine (Segment Edge0 Edge1)
-                        , segmentRelativeLine (Segment Edge1 Edge2)
+                        [ segmentRelativeLine edgeMidPoint (Segment Edge0 Edge1)
+                        , segmentRelativeLine edgeMidPoint (Segment Edge1 Edge2)
                         ]
             , test "segment line" <|
                 \_ ->
