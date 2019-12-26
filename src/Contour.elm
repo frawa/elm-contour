@@ -412,16 +412,16 @@ midPoint : Corner -> Corner -> RelativePoint
 midPoint corner1 corner2 =
     let
         (RelativePoint x1 y1) =
-            cornerOffset corner1
+            cornerPoint corner1
 
         (RelativePoint x2 y2) =
-            cornerOffset corner2
+            cornerPoint corner2
     in
     RelativePoint (mid x1 x2) (mid y1 y2)
 
 
-cornerOffset : Corner -> RelativePoint
-cornerOffset corner =
+cornerPoint : Corner -> RelativePoint
+cornerPoint corner =
     case corner of
         Corner0 ->
             RelativePoint 0 0
@@ -441,8 +441,8 @@ mid x y =
     (x + y) / 2
 
 
-segmentLine : Squares -> Int -> Segment -> Line
-segmentLine squares1 square segment =
+segmentLineForSquare : Squares -> Int -> Segment -> Line
+segmentLineForSquare squares1 square segment =
     let
         grid =
             { squares1 | steps = squares1.steps + 1 }
@@ -473,7 +473,7 @@ contourLines gfun level =
             gridMap segmentsByClass classified
 
         toLine =
-            segmentLine segments.grid
+            segmentLineForSquare segments.grid
 
         toLines =
             \i ->
