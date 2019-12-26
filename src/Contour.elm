@@ -14,7 +14,7 @@ type alias Point =
     ( Float, Float )
 
 
-type Step
+type StepSize
     = Step Float Float
 
 
@@ -43,7 +43,7 @@ type alias GridFunction =
     GridValues Float
 
 
-stepSize : Grid -> Step
+stepSize : Grid -> StepSize
 stepSize grid =
     let
         ( xmin, ymin ) =
@@ -449,14 +449,14 @@ segmentLine squares1 square segment =
         |> offsetLine (stepSize grid) (segmentLineOffset segment)
 
 
-offsetLine : Step -> Line -> Point -> Line
+offsetLine : StepSize -> Line -> Point -> Line
 offsetLine step line p =
     case line of
         Line p1 p2 ->
             Line (offsetPoint p step p1) (offsetPoint p step p2)
 
 
-offsetPoint : Point -> Step -> Point -> Point
+offsetPoint : Point -> StepSize -> Point -> Point
 offsetPoint ( x, y ) (Step hx hy) ( ox, oy ) =
     ( x + hx * ox, y + hy * oy )
 
