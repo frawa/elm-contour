@@ -14,6 +14,14 @@ type alias Point =
     ( Float, Float )
 
 
+type Step
+    = Step Float Float
+
+
+type RelativePoint
+    = RelativePoint Float Float
+
+
 type alias Grid =
     { steps : Int
     , min : GridIndex
@@ -35,7 +43,7 @@ type alias GridFunction =
     GridValues Float
 
 
-stepSize : Grid -> Point
+stepSize : Grid -> Step
 stepSize grid =
     let
         ( xmin, ymin ) =
@@ -53,7 +61,7 @@ stepSize grid =
         height =
             toFloat <| ymax - ymin
     in
-    ( width / n, height / n )
+    Step (width / n) (height / n)
 
 
 dimensionSize : Grid -> Int
@@ -69,7 +77,7 @@ gridSize grid =
 point : Grid -> GridIndex -> Point
 point grid ( i, j ) =
     let
-        ( hx, hy ) =
+        Step hx hy  =
             stepSize grid
     in
     ( toFloat i * hx, toFloat j * hy )
