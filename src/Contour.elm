@@ -261,16 +261,6 @@ corners edge1 =
             ( Corner3, Corner0 )
 
 
-
--- edges : Array Edge
--- edges =
---     fromList [ edge 0 0, edge 0 1, edge 1 1, edge 1 0 ]
--- (!) : Array a -> Int -> a
--- (!) arr i =
---     withDefault get i arr
--- infixr 9 !
-
-
 type Segment
     = Segment Edge Edge
 
@@ -334,8 +324,8 @@ segmentsByClass class =
 cornerGridIndex : Squares -> Int -> Corner -> GridIndex
 cornerGridIndex squares1 square corner =
     let
-        index1 =
-            squareCornerIndex squares1 square
+        ( a, b ) =
+            gridIndex squares1 square
 
         ( i, j ) =
             case corner of
@@ -351,7 +341,7 @@ cornerGridIndex squares1 square corner =
                 Corner3 ->
                     ( 0, 1 )
     in
-    ( index1 + i, index1 + j )
+    ( a + i, b + j )
 
 
 zeroOnEdgeAt : GridFunction -> Int -> Edge -> Float
@@ -373,13 +363,19 @@ zeroOnEdgeAt gfun square edge1 =
 
 
 
--- solution of f x = 0
--- where f 0 = a, f 1 = b
+{-
+   solution of f x = 0
+   where f 0 = a, f 1 = b
+-}
 
 
 zeroAt : Float -> Float -> Float
 zeroAt a b =
-    -a / (b - a)
+    if a == b then
+        0
+
+    else
+        -a / (b - a)
 
 
 type Line
@@ -402,16 +398,21 @@ segmentRelativeLine getPoint segment =
 
 
 edgeMidPoint : Edge -> RelativePoint
-edgeMidPoint edge1 =
+edgeMidPoint =
+    edgeRelativePoint 0.5
+
+
+edgeRelativePoint : Float -> Edge -> RelativePoint
+edgeRelativePoint lambda edge1 =
     let
         ( corner1, corner2 ) =
             corners edge1
     in
-    midPoint corner1 corner2
+    relativePoint lambda corner1 corner2
 
 
-midPoint : Corner -> Corner -> RelativePoint
-midPoint corner1 corner2 =
+relativePoint : Float -> Corner -> Corner -> RelativePoint
+relativePoint lambda corner1 corner2 =
     let
         (RelativePoint x1 y1) =
             cornerPoint corner1
@@ -419,7 +420,7 @@ midPoint corner1 corner2 =
         (RelativePoint x2 y2) =
             cornerPoint corner2
     in
-    RelativePoint (mid x1 x2) (mid y1 y2)
+    RelativePoint (relative lambda x1 x2) (relative lambda y1 y2)
 
 
 cornerPoint : Corner -> RelativePoint
@@ -438,13 +439,13 @@ cornerPoint corner =
             RelativePoint 0 1
 
 
-mid : Float -> Float -> Float
-mid x y =
-    (x + y) / 2
+relative : Float -> Float -> Float -> Float
+relative lambda x y =
+    x + lambda * (y - x)
 
 
-segmentLineForSquare : Squares -> Int -> Segment -> Line
-segmentLineForSquare squares1 square segment =
+segmentLineForSquare : (Int -> Edge -> RelativePoint) -> Squares -> Int -> Segment -> Line
+segmentLineForSquare getEdgePoint squares1 square segment =
     let
         grid =
             { squares1 | steps = squares1.steps + 1 }
@@ -452,7 +453,7 @@ segmentLineForSquare squares1 square segment =
     squareCornerIndex squares1 square
         |> gridIndex grid
         |> point grid
-        |> absoluteLine (stepSize grid) (segmentRelativeLine edgeMidPoint segment)
+        |> absoluteLine (stepSize grid) (segmentRelativeLine (getEdgePoint square) segment)
 
 
 absoluteLine : StepSize -> RelativeLine -> Point -> Line
@@ -471,11 +472,14 @@ contourLines gfun level =
         classified =
             classifySquares gfun level
 
+        gfunLeveled =
+            gridMap ((-) level) gfun
+
         segments =
             gridMap segmentsByClass classified
 
         toLine =
-            segmentLineForSquare segments.grid
+            segmentLineForSquare (edgeZeroPoint gfunLeveled) segments.grid
 
         toLines =
             \i ->
@@ -485,3 +489,12 @@ contourLines gfun level =
             gridMapIndexed toLines segments
     in
     concatMap identity <| toList <| .values lines
+
+
+edgeZeroPoint : GridFunction -> Int -> Edge -> RelativePoint
+edgeZeroPoint gfun square edge =
+    let
+        lambda =
+            zeroOnEdgeAt gfun square edge
+    in
+    edgeRelativePoint lambda edge

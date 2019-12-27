@@ -352,10 +352,10 @@ suite =
                         , Line ( 0.5, 1.0 ) ( 0.0, 0.5 )
                         , Line ( 0.0, 0.5 ) ( 0.5, 0.0 )
                         ]
-                        [ segmentLineForSquare sqs 0 (Segment Edge0 Edge1)
-                        , segmentLineForSquare sqs 0 (Segment Edge1 Edge2)
-                        , segmentLineForSquare sqs 0 (Segment Edge2 Edge3)
-                        , segmentLineForSquare sqs 0 (Segment Edge3 Edge0)
+                        [ segmentLineForSquare (always edgeMidPoint) sqs 0 (Segment Edge0 Edge1)
+                        , segmentLineForSquare (always edgeMidPoint) sqs 0 (Segment Edge1 Edge2)
+                        , segmentLineForSquare (always edgeMidPoint) sqs 0 (Segment Edge2 Edge3)
+                        , segmentLineForSquare (always edgeMidPoint) sqs 0 (Segment Edge3 Edge0)
                         ]
             , test "segment line finer" <|
                 \_ ->
@@ -370,8 +370,8 @@ suite =
                         [ Line ( 0.75, 0.0 ) ( 1.0, 0.25 )
                         , Line ( 0.5, 0.75 ) ( 0.25, 1.0 )
                         ]
-                        [ segmentLineForSquare sqs 1 (Segment Edge0 Edge1)
-                        , segmentLineForSquare sqs 2 (Segment Edge1 Edge2)
+                        [ segmentLineForSquare (always edgeMidPoint) sqs 1 (Segment Edge0 Edge1)
+                        , segmentLineForSquare (always edgeMidPoint) sqs 2 (Segment Edge1 Edge2)
                         ]
             , test "contour lines" <|
                 \_ ->
@@ -386,11 +386,11 @@ suite =
                             contourLines gfun 0.0
                     in
                     Expect.equal
-                        [ [ Line ( 0.3333333333333333, 0.16666666666666666 ) ( 0.16666666666666666, 0.3333333333333333 )
-                          , Line ( 0.6666666666666666, 0.16666666666666666 ) ( 0.3333333333333333, 0.16666666666666666 )
-                          , Line ( 1, 0.16666666666666666 ) ( 0.6666666666666666, 0.16666666666666666 )
-                          , Line ( 0.16666666666666666, 0.3333333333333333 ) ( 0.16666666666666666, 0.6666666666666666 )
-                          , Line ( 0.16666666666666666, 0.6666666666666666 ) ( 0.16666666666666666, 1 )
+                        [ [ Line ( 0.3333333333333333, 0 ) ( 0, 0.3333333333333333 )
+                          , Line ( 0.6666666666666666, 0 ) ( 0.3333333333333333, 0 )
+                          , Line ( 1, 0 ) ( 0.6666666666666666, 0 )
+                          , Line ( 0, 0.3333333333333333 ) ( 0, 0.6666666666666666 )
+                          , Line ( 0, 0.6666666666666666 ) ( 0, 1 )
                           ]
                         ]
                         [ lines ]
