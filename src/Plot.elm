@@ -6,7 +6,7 @@ import Collage.Layout exposing (vertical)
 import Collage.Render exposing (svgBox)
 import Collage.Text exposing (fromString)
 import Contour exposing (GridFunction, Line, contourLines, gridFunction, squares)
-import Html exposing (Attribute, Html, div, input)
+import Html exposing (Attribute, Html, div, input, option, select)
 import Html.Attributes as H exposing (..)
 import Html.Events exposing (onInput)
 import String exposing (fromFloat, fromInt)
@@ -25,6 +25,7 @@ type alias Model =
     , contours : Int
     , levelMin : Float
     , levelMax : Float
+    , function : Function
     }
 
 
@@ -34,7 +35,36 @@ model0 =
     , contours = 5
     , levelMin = 0
     , levelMax = 1
+    , function = defaultFunction
     }
+
+
+type alias Function =
+    { name : String
+    , f : Point -> Float
+    }
+
+
+defaultFunction : Function
+defaultFunction =
+    { name = "Cylinder"
+    , f =
+        \( x, y ) -> e ^ -((x - 0.5) ^ 2 + (y - 0.5) ^ 2)
+    }
+
+
+availableFunctions : List Function
+availableFunctions =
+    [ defaultFunction
+    , { name = "Bilinear"
+      , f =
+            \( x, y ) -> x * y
+      }
+    , { name = "f3"
+      , f =
+            \( x, y ) -> 2 * x ^ (y - 8)
+      }
+    ]
 
 
 modelGridFunction : Model -> GridFunction
@@ -42,17 +72,8 @@ modelGridFunction model =
     let
         grid =
             { min = ( 0, 0 ), max = ( 1, 1 ), steps = model.steps }
-
-        f =
-            \( x, y ) -> x * y
-
-        f2 =
-            \( x, y ) -> e ^ -((x - 0.5) ^ 2 + (y - 0.5) ^ 2)
-
-        f3 =
-            \( x, y ) -> 2 * x ^ (y - 8)
     in
-    gridFunction grid f2
+    gridFunction grid model.function.f
 
 
 
@@ -65,6 +86,7 @@ type Msg
     | UpdateContours String
     | UpdateLevelMin String
     | UpdateLevelMax String
+    | UpdateFunction String
 
 
 update : Msg -> Model -> Model
@@ -96,6 +118,13 @@ update msg model =
             in
             { model | levelMax = newVal, levelMin = Basics.min model.levelMin newVal }
 
+        UpdateFunction val ->
+            let
+                newVal =
+                    List.filter (\fun -> fun.name == val) availableFunctions |> List.head |> Maybe.withDefault defaultFunction
+            in
+            { model | function = newVal }
+
 
 
 -- VIEW
@@ -116,6 +145,7 @@ view model =
         , slider "Contours" (fromInt model.contours) 0 80 UpdateContours
         , slider "Level min" (fromFloat model.levelMin) -5 5 UpdateLevelMin
         , slider "Level max" (fromFloat model.levelMax) -5 5 UpdateLevelMax
+        , selectFunction "Function" availableFunctions UpdateFunction
         , allContours model
         ]
 
@@ -157,9 +187,6 @@ contour model level =
         gfun =
             modelGridFunction model
 
-        sqs =
-            squares gfun.grid
-
         lines =
             contourLines gfun level
     in
@@ -194,4 +221,17 @@ slider title val min max update1 =
             ]
             []
         , Html.text <| val
+        ]
+
+
+selectFunction : String -> List Function -> (String -> Msg) -> Html Msg
+selectFunction title functions update1 =
+    div []
+        [ Html.text <| title
+        , select [ onInput update1 ] <|
+            List.map
+                (\fun ->
+                    option [ value fun.name ] [ Html.text fun.name ]
+                )
+                functions
         ]
