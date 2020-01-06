@@ -1,11 +1,11 @@
 module Plot exposing (..)
 
 import Browser
-import Collage exposing (..)
+import Collage exposing (Collage, Path, Point, defaultLineStyle, group, rendered, segment, traced)
 import Collage.Layout exposing (vertical)
 import Collage.Render exposing (svgBox)
 import Collage.Text exposing (fromString)
-import Contour exposing (GridFunction, Line, contourLines, gridFunction, squares)
+import Contour exposing (GridFunction, Line, contourLines, gridFunction)
 import Html exposing (Attribute, Html, div, input, option, select)
 import Html.Attributes as H exposing (..)
 import Html.Events exposing (onInput)
