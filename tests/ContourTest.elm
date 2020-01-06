@@ -1,4 +1,4 @@
-module ContourTest exposing (..)
+module ContourTest exposing (suite)
 
 import Array exposing (Array, empty)
 import Contour exposing (..)

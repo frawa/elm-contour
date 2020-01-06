@@ -1,4 +1,23 @@
-module Contour exposing (..)
+module Contour exposing
+    ( GridFunction, gridFunction
+    , contourLines, Line(..)
+    , Edge(..), RelativeLine(..), RelativePoint(..), Segment(..), StepSize(..), classify, classifySquares, cornersIndices, edgeMidPoint, gridIndex, gridSize, index, listGridIndices, markLevel, point, segmentLineForSquare, segmentRelativeLine, segmentsByClass, squareCornerIndex, squares, stepSize, value, valueAt, zeroAt, zeroOnEdgeAt
+    )
+
+{-| This library calculate contour level lines for a two-dimensional scalar field,
+based on the Marching Squares algorithm <https://en.wikipedia.org/wiki/Marching_squares>.
+
+
+# Definition of a two-dimensional scalar field
+
+@docs GridFunction, gridFunction, Point, Grid
+
+
+# Calculate contour lines
+
+@docs contourLines, Line
+
+-}
 
 import Array exposing (Array, foldl, fromList, get, map, toList)
 import Bitwise exposing (or, shiftLeftBy)
@@ -35,6 +54,8 @@ type alias GridValues a =
     }
 
 
+{-| Represent a two-dimensioal scalar field
+-}
 type alias GridFunction =
     GridValues Float
 
@@ -127,6 +148,13 @@ gridMap f gvals =
     }
 
 
+{-| Construct a two-dimensial scalar field from a function
+
+        f : (Float,Float) -> Float
+
+    taking values in [0,1]x[0,1]
+
+-}
 gridFunction : Grid -> (Point -> Float) -> GridFunction
 gridFunction grid f =
     { grid = grid, values = fromList <| List.map (f << point grid) (listGridIndices grid) }
@@ -378,6 +406,8 @@ zeroAt a b =
         -a / (b - a)
 
 
+{-| A line within a contour
+-}
 type Line
     = Line Point Point
 
@@ -466,6 +496,8 @@ absolutePoint (Step hx hy) (RelativePoint rx ry) ( x, y ) =
     ( x + hx * rx, y + hy * ry )
 
 
+{-| Calculate contour lines for a given level
+-}
 contourLines : GridFunction -> Float -> List Line
 contourLines gfun level =
     let
