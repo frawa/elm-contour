@@ -2,3 +2,5 @@ elm-stuff/
 node_modules/
 elm-upgrade*.log
 .DS_Store
+
+docs.json

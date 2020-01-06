@@ -5,7 +5,7 @@ import Collage exposing (Collage, Path, Point, defaultLineStyle, group, rendered
 import Collage.Layout exposing (vertical)
 import Collage.Render exposing (svgBox)
 import Collage.Text exposing (fromString)
-import Contour exposing (GridFunction, Line, contourLines, gridFunction)
+import Contour exposing (GridFunction, Line, contourLines, gridFunction, points)
 import Html exposing (Attribute, Html, div, input, option, select)
 import Html.Attributes as H exposing (..)
 import Html.Events exposing (onInput)
@@ -170,10 +170,11 @@ lineToPath line =
     let
         scale =
             scaled ( myWidth, myHeight )
+
+        ( p1, p2 ) =
+            points line
     in
-    case line of
-        Contour.Line p1 p2 ->
-            segment (scale p1) (scale p2)
+    segment (scale p1) (scale p2)
 
 
 tracePath : Path -> Collage msg

@@ -3,10 +3,11 @@
   "version": "0.8.0",
   "description": "calculate contour level lines",
   "scripts": {
-    "build": "npm run test && npm run build-examples",
+    "build": "npm run test && npm run docs && npm run build-examples",
     "build-examples": "cd examples && ./make.sh",
     "test": "elm-test",
-    "build-docs": "npm run build && mkdir -p docs/ && rm -rf docs/* && cp examples/out/*.html docs/"
+    "docs": "elm make --docs docs.json",
+    "dist-examples": "npm run build && mkdir -p docs/ && rm -rf docs/* && cp examples/out/*.html docs/"
   },
   "devDependencies": {
     "elm": "^0.19.1-3",

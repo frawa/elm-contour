@@ -1,9 +1,9 @@
 module ContourTest exposing (suite)
 
 import Array exposing (Array, empty)
-import Contour exposing (..)
 import Expect exposing (Expectation, FloatingPointTolerance(..))
 import Fuzz exposing (intRange, tuple)
+import Internal.Contour exposing (..)
 import List exposing (length)
 import Test exposing (..)
 
