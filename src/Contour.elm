@@ -498,8 +498,8 @@ absolutePoint (Step hx hy) (RelativePoint rx ry) ( x, y ) =
 
 {-| Calculate contour lines for a given level
 -}
-contourLines : GridFunction -> Float -> List Line
-contourLines gfun level =
+contourLines : Float -> GridFunction -> List Line
+contourLines level gfun =
     let
         classified =
             classifySquares gfun level

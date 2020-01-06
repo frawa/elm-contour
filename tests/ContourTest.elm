@@ -383,7 +383,7 @@ suite =
                             gridFunction grid (\( x, y ) -> x * y)
 
                         lines =
-                            contourLines gfun 0.0
+                            contourLines 0.0 gfun
                     in
                     Expect.equal
                         [ [ Line ( 0.3333333333333333, 0 ) ( 0, 0.3333333333333333 )

@@ -11153,7 +11153,7 @@ var $author$project$Contour$segmentsByClass = function (_class) {
 	}
 };
 var $author$project$Contour$contourLines = F2(
-	function (gfun, level) {
+	function (level, gfun) {
 		var gfunLeveled = A2(
 			$author$project$Contour$gridMap,
 			$elm$core$Basics$sub(level),
@@ -11277,7 +11277,7 @@ var $author$project$Plot$tracePath = $timjs$elm_collage$Collage$traced($timjs$el
 var $author$project$Plot$contour = F2(
 	function (model, level) {
 		var gfun = $author$project$Plot$modelGridFunction(model);
-		var lines = A2($author$project$Contour$contourLines, gfun, level);
+		var lines = A2($author$project$Contour$contourLines, level, gfun);
 		return $timjs$elm_collage$Collage$group(
 			A2(
 				$elm$core$List$map,

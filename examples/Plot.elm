@@ -188,7 +188,7 @@ contour model level =
             modelGridFunction model
 
         lines =
-            contourLines gfun level
+            contourLines level gfun
     in
     group <| List.map (lineToPath >> tracePath) lines
 
