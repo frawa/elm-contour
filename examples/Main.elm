@@ -9,8 +9,8 @@ type alias Model =
     {}
 
 
-type alias Msg
-    = Bool
+type alias Msg =
+    Bool
 
 
 view : Model -> Html Msg
