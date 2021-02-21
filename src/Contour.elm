@@ -1,6 +1,8 @@
 module Contour exposing
     ( GridFunction, gridFunction, Point, Grid
     , contourLines, Line, points
+    , viewGridFunction, drawGridFunction, traceLine, drawContour
+    , Style, defaultStyle
     )
 
 {-| This library calculate contour level lines for a two-dimensional scalar field,
@@ -16,8 +18,16 @@ based on the Marching Squares algorithm <https://en.wikipedia.org/wiki/Marching_
 
 @docs contourLines, Line, points
 
+
+# Draw contour lines
+
+@docs viewGridFunction, drawGridFunction, traceLine, drawContour, Style, defaultStyle
+
 -}
 
+import Collage
+import Collage.Render as Render
+import Html
 import Internal.Contour as Internal
 
 
@@ -70,3 +80,62 @@ contourLines =
 points : Line -> ( Point, Point )
 points (Internal.Line p1 p2) =
     ( p1, p2 )
+
+
+{-| Render SVG with contours for several levels of a grid function.
+-}
+viewGridFunction : Style -> GridFunction -> List Float -> Html.Html msg
+viewGridFunction style gridFun levels =
+    drawGridFunction style gridFun levels
+        |> Render.svg
+
+{-| Rendering style properties.
+-}
+type alias Style =
+    { width : Int
+    , height : Int
+    , lineStyle : Collage.LineStyle
+    }
+
+{-| Default style.
+-}
+defaultStyle : Style
+defaultStyle =
+    { width = 500, height = 500, lineStyle = Collage.defaultLineStyle }
+
+
+{-| Draw contour for one level of a grid function.
+-}
+drawContour : Style -> GridFunction -> Float -> Collage.Collage msg
+drawContour style gridFun level =
+    contourLines level gridFun
+        |> List.map (traceLine style)
+        |> Collage.group
+
+
+{-| Draw contours for several levels of a grid function.
+-}
+drawGridFunction : Style -> GridFunction -> List Float -> Collage.Collage msg
+drawGridFunction style gridFun levels =
+    levels
+        |> List.map (drawContour style gridFun)
+        |> Collage.group
+
+
+{-| Draw a line as a traced path.
+-}
+traceLine : Style -> Line -> Collage.Collage msg
+traceLine style line =
+    let
+        scaled : Point -> Point -> Point
+        scaled =
+            \( w, h ) ( x, y ) -> ( w * x, h * y )
+
+        scale =
+            scaled ( toFloat style.width, toFloat style.height )
+
+        ( p1, p2 ) =
+            points line
+    in
+    Collage.segment (scale p1) (scale p2)
+        |> Collage.traced style.lineStyle
