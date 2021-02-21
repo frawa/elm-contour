@@ -3,7 +3,7 @@
     "name": "frawa/elm-contour",
     "summary": "Calculate contour level lines for a two-dimensional scalar field",
     "license": "MIT",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "exposed-modules": [
         "Contour"
     ],
