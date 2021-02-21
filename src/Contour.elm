@@ -1,8 +1,8 @@
 module Contour exposing
     ( GridFunction, gridFunction, Point, Grid
     , contourLines, Line, points
-    , viewGridFunction, drawGridFunction, traceLine, drawContour
-    , Style, defaultStyle
+    , viewGridFunction, drawGridFunction, traceLine, drawContour, Style, defaultStyle
+    , fromList, pointAt
     )
 
 {-| This library calculate contour level lines for a two-dimensional scalar field,
@@ -11,7 +11,7 @@ based on the Marching Squares algorithm <https://en.wikipedia.org/wiki/Marching_
 
 # Definition of a two-dimensional scalar field
 
-@docs GridFunction, gridFunction, Point, Grid
+@docs GridFunction, gridFunction, Point, Grid, pointAt, fromList
 
 
 # Calculate contour lines
@@ -62,6 +62,26 @@ gridFunction =
     Internal.gridFunction
 
 
+{-| Construct a two-dimensial scalar field from a data in a list of values
+
+    Values are expected in the order of indices in the given grid,
+    running from min to max, incrementing the first component first.
+
+    Use pointAt to get (x,y) coordinates for an data index.
+
+-}
+fromList : Grid -> List Float -> GridFunction
+fromList =
+    Internal.fromList
+
+
+{-| Get the point, ithat is (x,y) coordinates, in the grid for a data index.
+-}
+pointAt : Grid -> Int -> Point
+pointAt grid index =
+    Internal.gridIndex grid index |> Internal.point grid
+
+
 {-| A line within a contour
 -}
 type alias Line =
@@ -89,6 +109,7 @@ viewGridFunction style gridFun levels =
     drawGridFunction style gridFun levels
         |> Render.svg
 
+
 {-| Rendering style properties.
 -}
 type alias Style =
@@ -96,6 +117,7 @@ type alias Style =
     , height : Int
     , lineStyle : Collage.LineStyle
     }
+
 
 {-| Default style.
 -}
