@@ -10685,6 +10685,13 @@ var $timjs$elm_collage$Collage$defaultLineStyle = {
 	thickness: $timjs$elm_collage$Collage$thin
 };
 var $author$project$Contour$defaultStyle = {height: 500, lineStyle: $timjs$elm_collage$Collage$defaultLineStyle, width: 500};
+var $author$project$Internal$Contour$fromList = F2(
+	function (grid, values) {
+		return {
+			grid: grid,
+			values: $elm$core$Array$fromList(values)
+		};
+	});
 var $author$project$Internal$Contour$dimensionSize = function (grid) {
 	return function ($) {
 		return $.steps;
@@ -10746,17 +10753,16 @@ var $author$project$Internal$Contour$point = F2(
 	});
 var $author$project$Internal$Contour$gridFunction = F2(
 	function (grid, f) {
-		return {
-			grid: grid,
-			values: $elm$core$Array$fromList(
+		return A2(
+			$author$project$Internal$Contour$fromList,
+			grid,
+			A2(
+				$elm$core$List$map,
 				A2(
-					$elm$core$List$map,
-					A2(
-						$elm$core$Basics$composeL,
-						f,
-						$author$project$Internal$Contour$point(grid)),
-					$author$project$Internal$Contour$listGridIndices(grid)))
-		};
+					$elm$core$Basics$composeL,
+					f,
+					$author$project$Internal$Contour$point(grid)),
+				$author$project$Internal$Contour$listGridIndices(grid)));
 	});
 var $author$project$Contour$gridFunction = $author$project$Internal$Contour$gridFunction;
 var $author$project$Plot$modelGridFunction = function (model) {
