@@ -1,7 +1,7 @@
 module Internal.Contour exposing
     ( GridFunction, gridFunction, Point, Grid
     , contourLines, Line(..)
-    , Edge(..), RelativeLine(..), RelativePoint(..), Segment(..), StepSize(..), classify, classifySquares, cornersIndices, edgeMidPoint, gridIndex, gridSize, index, listGridIndices, markLevel, point, segmentLineForSquare, segmentRelativeLine, segmentsByClass, squareCornerIndex, squares, stepSize, value, valueAt, zeroAt, zeroOnEdgeAt
+    , Edge(..), RelativeLine(..), RelativePoint(..), Segment(..), StepSize(..), classify, classifySquares, cornersIndices, edgeMidPoint, fromList, gridIndex, gridSize, index, listGridIndices, markLevel, point, segmentLineForSquare, segmentRelativeLine, segmentsByClass, squareCornerIndex, squares, stepSize, value, valueAt, zeroAt, zeroOnEdgeAt
     )
 
 {-| This library calculate contour level lines for a two-dimensional scalar field,
@@ -19,9 +19,9 @@ based on the Marching Squares algorithm <https://en.wikipedia.org/wiki/Marching_
 
 -}
 
-import Array exposing (Array, foldl, fromList, get, map, toList)
+import Array exposing (Array, get, toList)
 import Bitwise exposing (or, shiftLeftBy)
-import List exposing (concatMap, map, range)
+import List exposing (concatMap, range)
 import Maybe exposing (withDefault)
 
 
@@ -157,7 +157,16 @@ gridMap f gvals =
 -}
 gridFunction : Grid -> (Point -> Float) -> GridFunction
 gridFunction grid f =
-    { grid = grid, values = fromList <| List.map (f << point grid) (listGridIndices grid) }
+    listGridIndices grid
+        |> List.map (f << point grid)
+        |> fromList grid
+
+
+fromList : Grid -> List Float -> GridFunction
+fromList grid values =
+    { grid = grid
+    , values = Array.fromList values
+    }
 
 
 markLevel : GridFunction -> Float -> GridValues Int
@@ -233,7 +242,7 @@ classifySquares gfun level =
                 |> List.map (cornersIndices squares_)
                 |> List.map (\corners1 -> List.map (value marked) corners1 |> List.map (withDefault 0))
                 |> List.map classify
-                |> fromList
+                |> Array.fromList
     }
 
 

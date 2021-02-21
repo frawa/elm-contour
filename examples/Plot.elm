@@ -1,17 +1,15 @@
 module Plot exposing (..)
 
 import Browser
-import Collage exposing (Collage, Path, Point, defaultLineStyle, group, rendered, segment, traced)
-import Collage.Layout exposing (vertical)
-import Collage.Render exposing (svgBox)
-import Collage.Text exposing (fromString)
-import Contour exposing (GridFunction, Line, contourLines, gridFunction, points)
-import Html exposing (Attribute, Html, div, input, option, select)
-import Html.Attributes as H exposing (..)
-import Html.Events exposing (onInput)
+import Collage exposing (Point)
+import Contour exposing (GridFunction, defaultStyle, gridFunction, viewGridFunction)
+import Html exposing (Html, div, input, option, select, text)
+import Html.Attributes as HA
+import Html.Events as HE
 import String exposing (fromFloat, fromInt)
 
 
+main : Program () Model Msg
 main =
     Browser.sandbox { init = model0, view = view, update = update }
 
@@ -130,14 +128,6 @@ update msg model =
 -- VIEW
 
 
-myWidth =
-    500
-
-
-myHeight =
-    500
-
-
 view : Model -> Html Msg
 view model =
     div []
@@ -152,73 +142,44 @@ view model =
 
 allContours : Model -> Html Msg
 allContours model =
-    svgBox ( 2 * myWidth, 2 * myHeight ) <|
-        vertical
-            [ -- , traced (solid Color.blue) <| segment ( 100, 100 ) ( 200, 200 )
-              contours model model.levelMin model.levelMax model.contours
-            , rendered <| fromString "Hello"
-            ]
-
-
-scaled : Point -> Point -> Point
-scaled ( w, h ) ( x, y ) =
-    ( w * x, h * y )
-
-
-lineToPath : Contour.Line -> Path
-lineToPath line =
     let
-        scale =
-            scaled ( myWidth, myHeight )
-
-        ( p1, p2 ) =
-            points line
-    in
-    segment (scale p1) (scale p2)
-
-
-tracePath : Path -> Collage msg
-tracePath =
-    traced defaultLineStyle
-
-
-contour : Model -> Float -> Collage msg
-contour model level =
-    let
-        gfun =
+        gridFun =
             modelGridFunction model
 
-        lines =
-            contourLines level gfun
-    in
-    group <| List.map (lineToPath >> tracePath) lines
+        style =
+            defaultStyle
 
+        steps =
+            model.contours
 
-contours : Model -> Float -> Float -> Int -> Collage msg
-contours model min max steps =
-    let
+        min =
+            model.levelMin
+
+        max =
+            model.levelMax
+
         delta =
             (max - min) / toFloat steps
 
-        level =
+        toLevel =
             \i -> min + toFloat i * delta
+
+        levels =
+            List.range 0 (model.contours - 1) |> List.map toLevel
     in
-    group <|
-        List.map (contour model) <|
-            List.map level <|
-                List.range 0 (steps - 1)
+    viewGridFunction style gridFun levels
 
 
 slider : String -> String -> Int -> Int -> (String -> Msg) -> Html Msg
 slider title val min max update1 =
     div []
-        [ Html.text <| title
+        [ text <| title
         , input
-            [ type_ "range"
-            , H.min <| fromInt min
-            , H.max <| fromInt max
-            , H.value val
-            , onInput update1
+            [ HA.type_ "range"
+            , HA.min <| fromInt min
+            , HA.max <| fromInt max
+            , HA.value val
+            , HE.onInput update1
             ]
             []
         , Html.text <| val
@@ -228,11 +189,11 @@ slider title val min max update1 =
 selectFunction : String -> List Function -> (String -> Msg) -> Html Msg
 selectFunction title functions update1 =
     div []
-        [ Html.text <| title
-        , select [ onInput update1 ] <|
+        [ text <| title
+        , select [ HE.onInput update1 ] <|
             List.map
                 (\fun ->
-                    option [ value fun.name ] [ Html.text fun.name ]
+                    option [ HA.value fun.name ] [ Html.text fun.name ]
                 )
                 functions
         ]

@@ -21,3 +21,15 @@ The library calculates a list of lines making up the contour for a given level l
 ## Examples
 
 Try examples at https://frawa.github.io/elm-contour/.
+
+
+## Development
+
+### Releasing
+
+A reminder on how to release this package.
+
+```
+yarn elm bump
+yarn elm publish
+```

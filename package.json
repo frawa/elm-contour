@@ -5,13 +5,31 @@
   "scripts": {
     "postinstall": "elm-tooling install",
     "build": "yarn test && yarn docs && yarn build-examples",
+    "watch": "npm-watch build",
     "build-examples": "cd examples && ./make.sh",
     "test": "elm-test",
+    "test:watch": "elm-test",
     "docs": "elm make --docs docs.json",
     "dist-examples": "yarn run build && mkdir -p docs/ && rm -rf docs/* && cp examples/out/*.html docs/"
   },
+  "watch": {
+    "build": {
+      "patterns": [
+        "src",
+        "examples"
+      ],
+      "extensions": "elm"
+    },
+    "test": {
+      "patterns": [
+        "src"
+      ],
+      "extensions": "elm"
+    }
+  },
   "devDependencies": {
-    "elm-test": "^0.19.1-revision4",
-    "elm-tooling": "^0.6.3"
+    "elm-test": "^0.19.1-revision6",
+    "elm-tooling": "^1.2.0",
+    "npm-watch": "^0.7.0"
   }
 }

@@ -10664,8 +10664,117 @@ var $author$project$Plot$UpdateLevelMax = function (a) {
 var $author$project$Plot$UpdateLevelMin = function (a) {
 	return {$: 'UpdateLevelMin', a: a};
 };
+var $timjs$elm_collage$Collage$Flat = {$: 'Flat'};
+var $timjs$elm_collage$Collage$Sharp = {$: 'Sharp'};
+var $avh4$elm_color$Color$RgbaSpace = F4(
+	function (a, b, c, d) {
+		return {$: 'RgbaSpace', a: a, b: b, c: c, d: d};
+	});
+var $avh4$elm_color$Color$black = A4($avh4$elm_color$Color$RgbaSpace, 0 / 255, 0 / 255, 0 / 255, 1.0);
+var $timjs$elm_collage$Collage$thin = 2.0;
+var $timjs$elm_collage$Collage$Core$Uniform = function (a) {
+	return {$: 'Uniform', a: a};
+};
+var $timjs$elm_collage$Collage$uniform = $timjs$elm_collage$Collage$Core$Uniform;
+var $timjs$elm_collage$Collage$defaultLineStyle = {
+	cap: $timjs$elm_collage$Collage$Flat,
+	dashPattern: _List_Nil,
+	dashPhase: 0,
+	fill: $timjs$elm_collage$Collage$uniform($avh4$elm_color$Color$black),
+	join: $timjs$elm_collage$Collage$Sharp,
+	thickness: $timjs$elm_collage$Collage$thin
+};
+var $author$project$Contour$defaultStyle = {height: 500, lineStyle: $timjs$elm_collage$Collage$defaultLineStyle, width: 500};
+var $author$project$Internal$Contour$fromList = F2(
+	function (grid, values) {
+		return {
+			grid: grid,
+			values: $elm$core$Array$fromList(values)
+		};
+	});
+var $author$project$Internal$Contour$dimensionSize = function (grid) {
+	return function ($) {
+		return $.steps;
+	}(grid) + 1;
+};
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $author$project$Internal$Contour$gridIndex = F2(
+	function (grid, index1) {
+		var n = $author$project$Internal$Contour$dimensionSize(grid);
+		return _Utils_Tuple2(
+			A2($elm$core$Basics$modBy, n, index1),
+			(index1 / n) | 0);
+	});
+var $author$project$Internal$Contour$gridSize = function (grid) {
+	return A2(
+		$elm$core$Basics$pow,
+		$author$project$Internal$Contour$dimensionSize(grid),
+		2);
+};
+var $author$project$Internal$Contour$listGridIndices = function (grid) {
+	return A2(
+		$elm$core$List$map,
+		$author$project$Internal$Contour$gridIndex(grid),
+		A2(
+			$elm$core$List$range,
+			0,
+			$author$project$Internal$Contour$gridSize(grid) - 1));
+};
+var $author$project$Internal$Contour$Step = F2(
+	function (a, b) {
+		return {$: 'Step', a: a, b: b};
+	});
+var $author$project$Internal$Contour$stepSize = function (grid) {
+	var n = function ($) {
+		return $.steps;
+	}(grid);
+	var _v0 = function ($) {
+		return $.min;
+	}(grid);
+	var xmin = _v0.a;
+	var ymin = _v0.b;
+	var _v1 = function ($) {
+		return $.max;
+	}(grid);
+	var xmax = _v1.a;
+	var ymax = _v1.b;
+	var width = xmax - xmin;
+	var height = ymax - ymin;
+	return A2($author$project$Internal$Contour$Step, width / n, height / n);
+};
+var $author$project$Internal$Contour$point = F2(
+	function (grid, _v0) {
+		var i = _v0.a;
+		var j = _v0.b;
+		var _v1 = $author$project$Internal$Contour$stepSize(grid);
+		var hx = _v1.a;
+		var hy = _v1.b;
+		return _Utils_Tuple2(i * hx, j * hy);
+	});
+var $author$project$Internal$Contour$gridFunction = F2(
+	function (grid, f) {
+		return A2(
+			$author$project$Internal$Contour$fromList,
+			grid,
+			A2(
+				$elm$core$List$map,
+				A2(
+					$elm$core$Basics$composeL,
+					f,
+					$author$project$Internal$Contour$point(grid)),
+				$author$project$Internal$Contour$listGridIndices(grid)));
+	});
+var $author$project$Contour$gridFunction = $author$project$Internal$Contour$gridFunction;
+var $author$project$Plot$modelGridFunction = function (model) {
+	var grid = {
+		max: _Utils_Tuple2(1, 1),
+		min: _Utils_Tuple2(0, 0),
+		steps: model.steps
+	};
+	return A2($author$project$Contour$gridFunction, grid, model._function.f);
+};
 var $elm$core$Bitwise$or = _Bitwise_or;
-var $author$project$Contour$classify = function (marked) {
+var $author$project$Internal$Contour$classify = function (marked) {
 	return A3(
 		$elm$core$List$foldr,
 		F2(
@@ -10675,59 +10784,31 @@ var $author$project$Contour$classify = function (marked) {
 		0,
 		marked);
 };
-var $author$project$Contour$dimensionSize = function (grid) {
-	return function ($) {
-		return $.steps;
-	}(grid) + 1;
-};
-var $elm$core$Basics$modBy = _Basics_modBy;
-var $author$project$Contour$gridIndex = F2(
-	function (grid, index1) {
-		var n = $author$project$Contour$dimensionSize(grid);
-		return _Utils_Tuple2(
-			A2($elm$core$Basics$modBy, n, index1),
-			(index1 / n) | 0);
-	});
-var $author$project$Contour$index = F2(
+var $author$project$Internal$Contour$index = F2(
 	function (grid, _v0) {
 		var i = _v0.a;
 		var j = _v0.b;
-		var n = $author$project$Contour$dimensionSize(grid);
+		var n = $author$project$Internal$Contour$dimensionSize(grid);
 		return (j * n) + i;
 	});
-var $author$project$Contour$squareCornerIndex = F2(
+var $author$project$Internal$Contour$squareCornerIndex = F2(
 	function (squares1, i) {
 		var grid = _Utils_update(
 			squares1,
 			{steps: squares1.steps + 1});
 		return A2(
-			$author$project$Contour$index,
+			$author$project$Internal$Contour$index,
 			grid,
-			A2($author$project$Contour$gridIndex, squares1, i));
+			A2($author$project$Internal$Contour$gridIndex, squares1, i));
 	});
-var $author$project$Contour$cornersIndices = F2(
+var $author$project$Internal$Contour$cornersIndices = F2(
 	function (squares1, index1) {
-		var n = $author$project$Contour$dimensionSize(squares1) + 1;
-		var corner = A2($author$project$Contour$squareCornerIndex, squares1, index1);
+		var n = $author$project$Internal$Contour$dimensionSize(squares1) + 1;
+		var corner = A2($author$project$Internal$Contour$squareCornerIndex, squares1, index1);
 		return _List_fromArray(
 			[corner, corner + 1, (corner + n) + 1, corner + n]);
 	});
-var $author$project$Contour$gridSize = function (grid) {
-	return A2(
-		$elm$core$Basics$pow,
-		$author$project$Contour$dimensionSize(grid),
-		2);
-};
-var $author$project$Contour$listGridIndices = function (grid) {
-	return A2(
-		$elm$core$List$map,
-		$author$project$Contour$gridIndex(grid),
-		A2(
-			$elm$core$List$range,
-			0,
-			$author$project$Contour$gridSize(grid) - 1));
-};
-var $author$project$Contour$boolToInt = function (val) {
+var $author$project$Internal$Contour$boolToInt = function (val) {
 	return val ? 1 : 0;
 };
 var $elm$core$Elm$JsArray$map = _JsArray_map;
@@ -10755,25 +10836,25 @@ var $elm$core$Array$map = F2(
 			A2($elm$core$Elm$JsArray$map, helper, tree),
 			A2($elm$core$Elm$JsArray$map, func, tail));
 	});
-var $author$project$Contour$markLevel = F2(
+var $author$project$Internal$Contour$markLevel = F2(
 	function (gfun, level) {
 		return {
 			grid: gfun.grid,
 			values: A2(
 				$elm$core$Array$map,
-				$author$project$Contour$boolToInt,
+				$author$project$Internal$Contour$boolToInt,
 				A2(
 					$elm$core$Array$map,
 					$elm$core$Basics$lt(level),
 					gfun.values))
 		};
 	});
-var $author$project$Contour$squares = function (grid) {
+var $author$project$Internal$Contour$squares = function (grid) {
 	return _Utils_update(
 		grid,
 		{steps: grid.steps - 1});
 };
-var $author$project$Contour$value = F2(
+var $author$project$Internal$Contour$value = F2(
 	function (gfun, index1) {
 		return A2(
 			$elm$core$Array$get,
@@ -10782,10 +10863,10 @@ var $author$project$Contour$value = F2(
 				return $.values;
 			}(gfun));
 	});
-var $author$project$Contour$classifySquares = F2(
+var $author$project$Internal$Contour$classifySquares = F2(
 	function (gfun, level) {
-		var marked = A2($author$project$Contour$markLevel, gfun, level);
-		var squares_ = $author$project$Contour$squares(
+		var marked = A2($author$project$Internal$Contour$markLevel, gfun, level);
+		var squares_ = $author$project$Internal$Contour$squares(
 			function ($) {
 				return $.grid;
 			}(marked));
@@ -10796,7 +10877,7 @@ var $author$project$Contour$classifySquares = F2(
 				values: $elm$core$Array$fromList(
 					A2(
 						$elm$core$List$map,
-						$author$project$Contour$classify,
+						$author$project$Internal$Contour$classify,
 						A2(
 							$elm$core$List$map,
 							function (corners1) {
@@ -10805,75 +10886,75 @@ var $author$project$Contour$classifySquares = F2(
 									$elm$core$Maybe$withDefault(0),
 									A2(
 										$elm$core$List$map,
-										$author$project$Contour$value(marked),
+										$author$project$Internal$Contour$value(marked),
 										corners1));
 							},
 							A2(
 								$elm$core$List$map,
-								$author$project$Contour$cornersIndices(squares_),
+								$author$project$Internal$Contour$cornersIndices(squares_),
 								A2(
 									$elm$core$List$map,
-									$author$project$Contour$index(squares_),
-									$author$project$Contour$listGridIndices(squares_))))))
+									$author$project$Internal$Contour$index(squares_),
+									$author$project$Internal$Contour$listGridIndices(squares_))))))
 			});
 	});
-var $author$project$Contour$Corner0 = {$: 'Corner0'};
-var $author$project$Contour$Corner1 = {$: 'Corner1'};
-var $author$project$Contour$Corner2 = {$: 'Corner2'};
-var $author$project$Contour$Corner3 = {$: 'Corner3'};
-var $author$project$Contour$corners = function (edge1) {
+var $author$project$Internal$Contour$Corner0 = {$: 'Corner0'};
+var $author$project$Internal$Contour$Corner1 = {$: 'Corner1'};
+var $author$project$Internal$Contour$Corner2 = {$: 'Corner2'};
+var $author$project$Internal$Contour$Corner3 = {$: 'Corner3'};
+var $author$project$Internal$Contour$corners = function (edge1) {
 	switch (edge1.$) {
 		case 'Edge0':
-			return _Utils_Tuple2($author$project$Contour$Corner0, $author$project$Contour$Corner1);
+			return _Utils_Tuple2($author$project$Internal$Contour$Corner0, $author$project$Internal$Contour$Corner1);
 		case 'Edge1':
-			return _Utils_Tuple2($author$project$Contour$Corner1, $author$project$Contour$Corner2);
+			return _Utils_Tuple2($author$project$Internal$Contour$Corner1, $author$project$Internal$Contour$Corner2);
 		case 'Edge2':
-			return _Utils_Tuple2($author$project$Contour$Corner2, $author$project$Contour$Corner3);
+			return _Utils_Tuple2($author$project$Internal$Contour$Corner2, $author$project$Internal$Contour$Corner3);
 		default:
-			return _Utils_Tuple2($author$project$Contour$Corner3, $author$project$Contour$Corner0);
+			return _Utils_Tuple2($author$project$Internal$Contour$Corner3, $author$project$Internal$Contour$Corner0);
 	}
 };
-var $author$project$Contour$RelativePoint = F2(
+var $author$project$Internal$Contour$RelativePoint = F2(
 	function (a, b) {
 		return {$: 'RelativePoint', a: a, b: b};
 	});
-var $author$project$Contour$cornerPoint = function (corner) {
+var $author$project$Internal$Contour$cornerPoint = function (corner) {
 	switch (corner.$) {
 		case 'Corner0':
-			return A2($author$project$Contour$RelativePoint, 0, 0);
+			return A2($author$project$Internal$Contour$RelativePoint, 0, 0);
 		case 'Corner1':
-			return A2($author$project$Contour$RelativePoint, 1, 0);
+			return A2($author$project$Internal$Contour$RelativePoint, 1, 0);
 		case 'Corner2':
-			return A2($author$project$Contour$RelativePoint, 1, 1);
+			return A2($author$project$Internal$Contour$RelativePoint, 1, 1);
 		default:
-			return A2($author$project$Contour$RelativePoint, 0, 1);
+			return A2($author$project$Internal$Contour$RelativePoint, 0, 1);
 	}
 };
-var $author$project$Contour$relative = F3(
+var $author$project$Internal$Contour$relative = F3(
 	function (lambda, x, y) {
 		return x + (lambda * (y - x));
 	});
-var $author$project$Contour$relativePoint = F3(
+var $author$project$Internal$Contour$relativePoint = F3(
 	function (lambda, corner1, corner2) {
-		var _v0 = $author$project$Contour$cornerPoint(corner2);
+		var _v0 = $author$project$Internal$Contour$cornerPoint(corner2);
 		var x2 = _v0.a;
 		var y2 = _v0.b;
-		var _v1 = $author$project$Contour$cornerPoint(corner1);
+		var _v1 = $author$project$Internal$Contour$cornerPoint(corner1);
 		var x1 = _v1.a;
 		var y1 = _v1.b;
 		return A2(
-			$author$project$Contour$RelativePoint,
-			A3($author$project$Contour$relative, lambda, x1, x2),
-			A3($author$project$Contour$relative, lambda, y1, y2));
+			$author$project$Internal$Contour$RelativePoint,
+			A3($author$project$Internal$Contour$relative, lambda, x1, x2),
+			A3($author$project$Internal$Contour$relative, lambda, y1, y2));
 	});
-var $author$project$Contour$edgeRelativePoint = F2(
+var $author$project$Internal$Contour$edgeRelativePoint = F2(
 	function (lambda, edge1) {
-		var _v0 = $author$project$Contour$corners(edge1);
+		var _v0 = $author$project$Internal$Contour$corners(edge1);
 		var corner1 = _v0.a;
 		var corner2 = _v0.b;
-		return A3($author$project$Contour$relativePoint, lambda, corner1, corner2);
+		return A3($author$project$Internal$Contour$relativePoint, lambda, corner1, corner2);
 	});
-var $author$project$Contour$cornerGridIndex = F3(
+var $author$project$Internal$Contour$cornerGridIndex = F3(
 	function (squares1, square, corner) {
 		var _v0 = function () {
 			switch (corner.$) {
@@ -10889,52 +10970,52 @@ var $author$project$Contour$cornerGridIndex = F3(
 		}();
 		var i = _v0.a;
 		var j = _v0.b;
-		var _v2 = A2($author$project$Contour$gridIndex, squares1, square);
+		var _v2 = A2($author$project$Internal$Contour$gridIndex, squares1, square);
 		var a = _v2.a;
 		var b = _v2.b;
 		return _Utils_Tuple2(a + i, b + j);
 	});
-var $author$project$Contour$valueAt = F2(
+var $author$project$Internal$Contour$valueAt = F2(
 	function (gfun, coor) {
 		return A2(
 			$elm$core$Maybe$withDefault,
 			0,
 			A2(
-				$author$project$Contour$value,
+				$author$project$Internal$Contour$value,
 				gfun,
 				A2(
-					$author$project$Contour$index,
+					$author$project$Internal$Contour$index,
 					function ($) {
 						return $.grid;
 					}(gfun),
 					coor)));
 	});
-var $author$project$Contour$zeroAt = F2(
+var $author$project$Internal$Contour$zeroAt = F2(
 	function (a, b) {
 		return _Utils_eq(a, b) ? 0 : ((-a) / (b - a));
 	});
-var $author$project$Contour$zeroOnEdgeAt = F3(
+var $author$project$Internal$Contour$zeroOnEdgeAt = F3(
 	function (gfun, square, edge1) {
-		var sqs = $author$project$Contour$squares(gfun.grid);
-		var _v0 = $author$project$Contour$corners(edge1);
+		var sqs = $author$project$Internal$Contour$squares(gfun.grid);
+		var _v0 = $author$project$Internal$Contour$corners(edge1);
 		var corner1 = _v0.a;
 		var corner2 = _v0.b;
 		var a = A2(
-			$author$project$Contour$valueAt,
+			$author$project$Internal$Contour$valueAt,
 			gfun,
-			A3($author$project$Contour$cornerGridIndex, sqs, square, corner1));
+			A3($author$project$Internal$Contour$cornerGridIndex, sqs, square, corner1));
 		var b = A2(
-			$author$project$Contour$valueAt,
+			$author$project$Internal$Contour$valueAt,
 			gfun,
-			A3($author$project$Contour$cornerGridIndex, sqs, square, corner2));
-		return A2($author$project$Contour$zeroAt, a, b);
+			A3($author$project$Internal$Contour$cornerGridIndex, sqs, square, corner2));
+		return A2($author$project$Internal$Contour$zeroAt, a, b);
 	});
-var $author$project$Contour$edgeZeroPoint = F3(
+var $author$project$Internal$Contour$edgeZeroPoint = F3(
 	function (gfun, square, edge) {
-		var lambda = A3($author$project$Contour$zeroOnEdgeAt, gfun, square, edge);
-		return A2($author$project$Contour$edgeRelativePoint, lambda, edge);
+		var lambda = A3($author$project$Internal$Contour$zeroOnEdgeAt, gfun, square, edge);
+		return A2($author$project$Internal$Contour$edgeRelativePoint, lambda, edge);
 	});
-var $author$project$Contour$gridMap = F2(
+var $author$project$Internal$Contour$gridMap = F2(
 	function (f, gvals) {
 		return {
 			grid: gvals.grid,
@@ -10960,7 +11041,7 @@ var $elm$core$Array$toIndexedList = function (array) {
 		_Utils_Tuple2(len - 1, _List_Nil),
 		array).b;
 };
-var $author$project$Contour$gridMapIndexed = F2(
+var $author$project$Internal$Contour$gridMapIndexed = F2(
 	function (f, gvals) {
 		return {
 			grid: gvals.grid,
@@ -10975,11 +11056,11 @@ var $author$project$Contour$gridMapIndexed = F2(
 					$elm$core$Array$toIndexedList(gvals.values)))
 		};
 	});
-var $author$project$Contour$Line = F2(
+var $author$project$Internal$Contour$Line = F2(
 	function (a, b) {
 		return {$: 'Line', a: a, b: b};
 	});
-var $author$project$Contour$absolutePoint = F3(
+var $author$project$Internal$Contour$absolutePoint = F3(
 	function (_v0, _v1, _v2) {
 		var hx = _v0.a;
 		var hy = _v0.b;
@@ -10989,88 +11070,57 @@ var $author$project$Contour$absolutePoint = F3(
 		var y = _v2.b;
 		return _Utils_Tuple2(x + (hx * rx), y + (hy * ry));
 	});
-var $author$project$Contour$absoluteLine = F3(
+var $author$project$Internal$Contour$absoluteLine = F3(
 	function (step, _v0, p) {
 		var rp1 = _v0.a;
 		var rp2 = _v0.b;
 		return A2(
-			$author$project$Contour$Line,
-			A3($author$project$Contour$absolutePoint, step, rp1, p),
-			A3($author$project$Contour$absolutePoint, step, rp2, p));
+			$author$project$Internal$Contour$Line,
+			A3($author$project$Internal$Contour$absolutePoint, step, rp1, p),
+			A3($author$project$Internal$Contour$absolutePoint, step, rp2, p));
 	});
-var $author$project$Contour$Step = F2(
-	function (a, b) {
-		return {$: 'Step', a: a, b: b};
-	});
-var $author$project$Contour$stepSize = function (grid) {
-	var n = function ($) {
-		return $.steps;
-	}(grid);
-	var _v0 = function ($) {
-		return $.min;
-	}(grid);
-	var xmin = _v0.a;
-	var ymin = _v0.b;
-	var _v1 = function ($) {
-		return $.max;
-	}(grid);
-	var xmax = _v1.a;
-	var ymax = _v1.b;
-	var width = xmax - xmin;
-	var height = ymax - ymin;
-	return A2($author$project$Contour$Step, width / n, height / n);
-};
-var $author$project$Contour$point = F2(
-	function (grid, _v0) {
-		var i = _v0.a;
-		var j = _v0.b;
-		var _v1 = $author$project$Contour$stepSize(grid);
-		var hx = _v1.a;
-		var hy = _v1.b;
-		return _Utils_Tuple2(i * hx, j * hy);
-	});
-var $author$project$Contour$RelativeLine = F2(
+var $author$project$Internal$Contour$RelativeLine = F2(
 	function (a, b) {
 		return {$: 'RelativeLine', a: a, b: b};
 	});
-var $author$project$Contour$segmentRelativeLine = F2(
+var $author$project$Internal$Contour$segmentRelativeLine = F2(
 	function (getPoint, segment) {
 		var edge1 = segment.a;
 		var edge2 = segment.b;
 		return A2(
-			$author$project$Contour$RelativeLine,
+			$author$project$Internal$Contour$RelativeLine,
 			getPoint(edge1),
 			getPoint(edge2));
 	});
-var $author$project$Contour$segmentLineForSquare = F4(
+var $author$project$Internal$Contour$segmentLineForSquare = F4(
 	function (getEdgePoint, squares1, square, segment) {
 		var grid = _Utils_update(
 			squares1,
 			{steps: squares1.steps + 1});
 		return A3(
-			$author$project$Contour$absoluteLine,
-			$author$project$Contour$stepSize(grid),
+			$author$project$Internal$Contour$absoluteLine,
+			$author$project$Internal$Contour$stepSize(grid),
 			A2(
-				$author$project$Contour$segmentRelativeLine,
+				$author$project$Internal$Contour$segmentRelativeLine,
 				getEdgePoint(square),
 				segment),
 			A2(
-				$author$project$Contour$point,
+				$author$project$Internal$Contour$point,
 				grid,
 				A2(
-					$author$project$Contour$gridIndex,
+					$author$project$Internal$Contour$gridIndex,
 					grid,
-					A2($author$project$Contour$squareCornerIndex, squares1, square))));
+					A2($author$project$Internal$Contour$squareCornerIndex, squares1, square))));
 	});
-var $author$project$Contour$Edge0 = {$: 'Edge0'};
-var $author$project$Contour$Edge1 = {$: 'Edge1'};
-var $author$project$Contour$Edge2 = {$: 'Edge2'};
-var $author$project$Contour$Edge3 = {$: 'Edge3'};
-var $author$project$Contour$Segment = F2(
+var $author$project$Internal$Contour$Edge0 = {$: 'Edge0'};
+var $author$project$Internal$Contour$Edge1 = {$: 'Edge1'};
+var $author$project$Internal$Contour$Edge2 = {$: 'Edge2'};
+var $author$project$Internal$Contour$Edge3 = {$: 'Edge3'};
+var $author$project$Internal$Contour$Segment = F2(
 	function (a, b) {
 		return {$: 'Segment', a: a, b: b};
 	});
-var $author$project$Contour$segmentsByClass = function (_class) {
+var $author$project$Internal$Contour$segmentsByClass = function (_class) {
 	switch (_class) {
 		case 0:
 			return _List_Nil;
@@ -11079,96 +11129,96 @@ var $author$project$Contour$segmentsByClass = function (_class) {
 		case 1:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge0, $author$project$Contour$Edge3)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge0, $author$project$Internal$Contour$Edge3)
 				]);
 		case 14:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge0, $author$project$Contour$Edge3)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge0, $author$project$Internal$Contour$Edge3)
 				]);
 		case 2:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge0, $author$project$Contour$Edge1)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge0, $author$project$Internal$Contour$Edge1)
 				]);
 		case 13:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge0, $author$project$Contour$Edge1)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge0, $author$project$Internal$Contour$Edge1)
 				]);
 		case 3:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge1, $author$project$Contour$Edge3)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge1, $author$project$Internal$Contour$Edge3)
 				]);
 		case 12:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge1, $author$project$Contour$Edge3)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge1, $author$project$Internal$Contour$Edge3)
 				]);
 		case 4:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge1, $author$project$Contour$Edge2)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge1, $author$project$Internal$Contour$Edge2)
 				]);
 		case 11:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge1, $author$project$Contour$Edge2)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge1, $author$project$Internal$Contour$Edge2)
 				]);
 		case 5:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge0, $author$project$Contour$Edge1),
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge2, $author$project$Contour$Edge3)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge0, $author$project$Internal$Contour$Edge1),
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge2, $author$project$Internal$Contour$Edge3)
 				]);
 		case 6:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge0, $author$project$Contour$Edge2)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge0, $author$project$Internal$Contour$Edge2)
 				]);
 		case 9:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge0, $author$project$Contour$Edge2)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge0, $author$project$Internal$Contour$Edge2)
 				]);
 		case 7:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge2, $author$project$Contour$Edge3)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge2, $author$project$Internal$Contour$Edge3)
 				]);
 		case 8:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge2, $author$project$Contour$Edge3)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge2, $author$project$Internal$Contour$Edge3)
 				]);
 		case 10:
 			return _List_fromArray(
 				[
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge0, $author$project$Contour$Edge3),
-					A2($author$project$Contour$Segment, $author$project$Contour$Edge1, $author$project$Contour$Edge2)
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge0, $author$project$Internal$Contour$Edge3),
+					A2($author$project$Internal$Contour$Segment, $author$project$Internal$Contour$Edge1, $author$project$Internal$Contour$Edge2)
 				]);
 		default:
 			return _List_Nil;
 	}
 };
-var $author$project$Contour$contourLines = F2(
+var $author$project$Internal$Contour$contourLines = F2(
 	function (level, gfun) {
 		var gfunLeveled = A2(
-			$author$project$Contour$gridMap,
+			$author$project$Internal$Contour$gridMap,
 			$elm$core$Basics$sub(level),
 			gfun);
-		var classified = A2($author$project$Contour$classifySquares, gfun, level);
-		var segments = A2($author$project$Contour$gridMap, $author$project$Contour$segmentsByClass, classified);
+		var classified = A2($author$project$Internal$Contour$classifySquares, gfun, level);
+		var segments = A2($author$project$Internal$Contour$gridMap, $author$project$Internal$Contour$segmentsByClass, classified);
 		var toLine = A2(
-			$author$project$Contour$segmentLineForSquare,
-			$author$project$Contour$edgeZeroPoint(gfunLeveled),
+			$author$project$Internal$Contour$segmentLineForSquare,
+			$author$project$Internal$Contour$edgeZeroPoint(gfunLeveled),
 			segments.grid);
 		var toLines = function (i) {
 			return $elm$core$List$map(
 				toLine(i));
 		};
-		var lines = A2($author$project$Contour$gridMapIndexed, toLines, segments);
+		var lines = A2($author$project$Internal$Contour$gridMapIndexed, toLines, segments);
 		return A2(
 			$elm$core$List$concatMap,
 			$elm$core$Basics$identity,
@@ -11177,6 +11227,7 @@ var $author$project$Contour$contourLines = F2(
 					return $.values;
 				}(lines)));
 	});
+var $author$project$Contour$contourLines = $author$project$Internal$Contour$contourLines;
 var $timjs$elm_collage$Collage$Core$Group = function (a) {
 	return {$: 'Group', a: a};
 };
@@ -11192,16 +11243,11 @@ var $timjs$elm_collage$Collage$Core$collage = function (basic) {
 	};
 };
 var $timjs$elm_collage$Collage$group = A2($elm$core$Basics$composeL, $timjs$elm_collage$Collage$Core$collage, $timjs$elm_collage$Collage$Core$Group);
-var $author$project$Plot$myHeight = 500;
-var $author$project$Plot$myWidth = 500;
-var $author$project$Plot$scaled = F2(
-	function (_v0, _v1) {
-		var w = _v0.a;
-		var h = _v0.b;
-		var x = _v1.a;
-		var y = _v1.b;
-		return _Utils_Tuple2(w * x, h * y);
-	});
+var $author$project$Contour$points = function (_v0) {
+	var p1 = _v0.a;
+	var p2 = _v0.b;
+	return _Utils_Tuple2(p1, p2);
+};
 var $timjs$elm_collage$Collage$Core$Polyline = function (a) {
 	return {$: 'Polyline', a: a};
 };
@@ -11212,58 +11258,6 @@ var $timjs$elm_collage$Collage$segment = F2(
 			_List_fromArray(
 				[a, b]));
 	});
-var $author$project$Plot$lineToPath = function (line) {
-	var scale = $author$project$Plot$scaled(
-		_Utils_Tuple2($author$project$Plot$myWidth, $author$project$Plot$myHeight));
-	var p1 = line.a;
-	var p2 = line.b;
-	return A2(
-		$timjs$elm_collage$Collage$segment,
-		scale(p1),
-		scale(p2));
-};
-var $author$project$Contour$gridFunction = F2(
-	function (grid, f) {
-		return {
-			grid: grid,
-			values: $elm$core$Array$fromList(
-				A2(
-					$elm$core$List$map,
-					A2(
-						$elm$core$Basics$composeL,
-						f,
-						$author$project$Contour$point(grid)),
-					$author$project$Contour$listGridIndices(grid)))
-		};
-	});
-var $author$project$Plot$modelGridFunction = function (model) {
-	var grid = {
-		max: _Utils_Tuple2(1, 1),
-		min: _Utils_Tuple2(0, 0),
-		steps: model.steps
-	};
-	return A2($author$project$Contour$gridFunction, grid, model._function.f);
-};
-var $timjs$elm_collage$Collage$Flat = {$: 'Flat'};
-var $timjs$elm_collage$Collage$Sharp = {$: 'Sharp'};
-var $avh4$elm_color$Color$RgbaSpace = F4(
-	function (a, b, c, d) {
-		return {$: 'RgbaSpace', a: a, b: b, c: c, d: d};
-	});
-var $avh4$elm_color$Color$black = A4($avh4$elm_color$Color$RgbaSpace, 0 / 255, 0 / 255, 0 / 255, 1.0);
-var $timjs$elm_collage$Collage$thin = 2.0;
-var $timjs$elm_collage$Collage$Core$Uniform = function (a) {
-	return {$: 'Uniform', a: a};
-};
-var $timjs$elm_collage$Collage$uniform = $timjs$elm_collage$Collage$Core$Uniform;
-var $timjs$elm_collage$Collage$defaultLineStyle = {
-	cap: $timjs$elm_collage$Collage$Flat,
-	dashPattern: _List_Nil,
-	dashPhase: 0,
-	fill: $timjs$elm_collage$Collage$uniform($avh4$elm_color$Color$black),
-	join: $timjs$elm_collage$Collage$Sharp,
-	thickness: $timjs$elm_collage$Collage$thin
-};
 var $timjs$elm_collage$Collage$Core$Path = F2(
 	function (a, b) {
 		return {$: 'Path', a: a, b: b};
@@ -11273,64 +11267,49 @@ var $timjs$elm_collage$Collage$traced = F2(
 		return $timjs$elm_collage$Collage$Core$collage(
 			A2($timjs$elm_collage$Collage$Core$Path, linestyle, p));
 	});
-var $author$project$Plot$tracePath = $timjs$elm_collage$Collage$traced($timjs$elm_collage$Collage$defaultLineStyle);
-var $author$project$Plot$contour = F2(
-	function (model, level) {
-		var gfun = $author$project$Plot$modelGridFunction(model);
-		var lines = A2($author$project$Contour$contourLines, level, gfun);
+var $author$project$Contour$traceLine = F2(
+	function (style, line) {
+		var scaled = F2(
+			function (_v1, _v2) {
+				var w = _v1.a;
+				var h = _v1.b;
+				var x = _v2.a;
+				var y = _v2.b;
+				return _Utils_Tuple2(w * x, h * y);
+			});
+		var scale = scaled(
+			_Utils_Tuple2(style.width, style.height));
+		var _v0 = $author$project$Contour$points(line);
+		var p1 = _v0.a;
+		var p2 = _v0.b;
+		return A2(
+			$timjs$elm_collage$Collage$traced,
+			style.lineStyle,
+			A2(
+				$timjs$elm_collage$Collage$segment,
+				scale(p1),
+				scale(p2)));
+	});
+var $author$project$Contour$drawContour = F3(
+	function (style, gridFun, level) {
 		return $timjs$elm_collage$Collage$group(
 			A2(
 				$elm$core$List$map,
-				A2($elm$core$Basics$composeR, $author$project$Plot$lineToPath, $author$project$Plot$tracePath),
-				lines));
+				$author$project$Contour$traceLine(style),
+				A2($author$project$Contour$contourLines, level, gridFun)));
 	});
-var $author$project$Plot$contours = F4(
-	function (model, min, max, steps) {
-		var delta = (max - min) / steps;
-		var level = function (i) {
-			return min + (i * delta);
-		};
+var $author$project$Contour$drawGridFunction = F3(
+	function (style, gridFun, levels) {
 		return $timjs$elm_collage$Collage$group(
 			A2(
 				$elm$core$List$map,
-				$author$project$Plot$contour(model),
-				A2(
-					$elm$core$List$map,
-					level,
-					A2($elm$core$List$range, 0, steps - 1))));
+				A2($author$project$Contour$drawContour, style, gridFun),
+				levels));
 	});
-var $timjs$elm_collage$Collage$Core$Chunk = F2(
-	function (a, b) {
-		return {$: 'Chunk', a: a, b: b};
-	});
-var $timjs$elm_collage$Collage$Text$None = {$: 'None'};
-var $timjs$elm_collage$Collage$Text$Regular = {$: 'Regular'};
-var $timjs$elm_collage$Collage$Text$Sansserif = {$: 'Sansserif'};
-var $timjs$elm_collage$Collage$Text$Upright = {$: 'Upright'};
-var $timjs$elm_collage$Collage$Text$normal = 16;
-var $timjs$elm_collage$Collage$Text$defaultStyle = {color: $avh4$elm_color$Color$black, line: $timjs$elm_collage$Collage$Text$None, shape: $timjs$elm_collage$Collage$Text$Upright, size: $timjs$elm_collage$Collage$Text$normal, typeface: $timjs$elm_collage$Collage$Text$Sansserif, weight: $timjs$elm_collage$Collage$Text$Regular};
-var $timjs$elm_collage$Collage$Text$fromString = $timjs$elm_collage$Collage$Core$Chunk($timjs$elm_collage$Collage$Text$defaultStyle);
-var $timjs$elm_collage$Collage$Core$Text = F2(
-	function (a, b) {
-		return {$: 'Text', a: a, b: b};
-	});
-var $timjs$elm_collage$Collage$Text$height = function (_v0) {
-	var sty = _v0.a;
-	return sty.size;
-};
-var $timjs$elm_collage$Collage$Text$width = function (text) {
-	var sty = text.a;
-	var str = text.b;
-	return ($timjs$elm_collage$Collage$Text$height(text) / 2) * $elm$core$String$length(str);
-};
-var $timjs$elm_collage$Collage$rendered = function (text) {
-	return $timjs$elm_collage$Collage$Core$collage(
-		A2(
-			$timjs$elm_collage$Collage$Core$Text,
-			_Utils_Tuple2(
-				$timjs$elm_collage$Collage$Text$width(text),
-				$timjs$elm_collage$Collage$Text$height(text)),
-			text));
+var $timjs$elm_collage$Collage$opposite = function (_v0) {
+	var x = _v0.a;
+	var y = _v0.b;
+	return _Utils_Tuple2(-x, -y);
 };
 var $timjs$elm_collage$Collage$shift = F2(
 	function (_v0, collage) {
@@ -11345,6 +11324,245 @@ var $timjs$elm_collage$Collage$shift = F2(
 				shift: _Utils_Tuple2(x + dx, y + dy)
 			});
 	});
+var $timjs$elm_collage$Collage$Layout$align = F2(
+	function (anchor, col) {
+		return A2(
+			$timjs$elm_collage$Collage$shift,
+			$timjs$elm_collage$Collage$opposite(
+				anchor(col)),
+			col);
+	});
+var $elm$core$Basics$cos = _Basics_cos;
+var $elm$core$Basics$sin = _Basics_sin;
+var $timjs$elm_collage$Collage$Core$apply = function (_v0) {
+	var shift = _v0.shift;
+	var scale = _v0.scale;
+	var rotation = _v0.rotation;
+	var rotated = function (_v5) {
+		var x = _v5.a;
+		var y = _v5.b;
+		var s = $elm$core$Basics$sin(rotation);
+		var c = $elm$core$Basics$cos(rotation);
+		return _Utils_Tuple2((c * x) - (s * y), (s * x) + (c * y));
+	};
+	var _v1 = scale;
+	var sx = _v1.a;
+	var sy = _v1.b;
+	var scaled = function (_v4) {
+		var x = _v4.a;
+		var y = _v4.b;
+		return _Utils_Tuple2(sx * x, sy * y);
+	};
+	var _v2 = shift;
+	var dx = _v2.a;
+	var dy = _v2.b;
+	var shifted = function (_v3) {
+		var x = _v3.a;
+		var y = _v3.b;
+		return _Utils_Tuple2(x + dx, y + dy);
+	};
+	return A2(
+		$elm$core$Basics$composeL,
+		A2($elm$core$Basics$composeL, shifted, scaled),
+		rotated);
+};
+var $timjs$elm_collage$Collage$Layout$handlePoints = function (thickness) {
+	var thicken = function (_v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		var t = thickness / 2;
+		return _Utils_Tuple2(
+			(x < 0) ? (x - t) : (x + t),
+			(y < 0) ? (y - t) : (y + t));
+	};
+	return $elm$core$List$map(thicken);
+};
+var $timjs$elm_collage$Collage$Layout$handleBox = F2(
+	function (thickness, _v0) {
+		var w = _v0.a;
+		var h = _v0.b;
+		var y = h / 2;
+		var x = w / 2;
+		return A2(
+			$timjs$elm_collage$Collage$Layout$handlePoints,
+			thickness,
+			_List_fromArray(
+				[
+					_Utils_Tuple2(-x, -y),
+					_Utils_Tuple2(x, -y),
+					_Utils_Tuple2(x, y),
+					_Utils_Tuple2(-x, y)
+				]));
+	});
+var $elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$minimum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $timjs$elm_collage$Collage$Layout$unpack = function (_v0) {
+	var toTop = _v0.toTop;
+	var toBottom = _v0.toBottom;
+	var toRight = _v0.toRight;
+	var toLeft = _v0.toLeft;
+	return _List_fromArray(
+		[
+			_Utils_Tuple2(-toLeft, -toBottom),
+			_Utils_Tuple2(toRight, -toBottom),
+			_Utils_Tuple2(toRight, toTop),
+			_Utils_Tuple2(-toLeft, toTop)
+		]);
+};
+var $elm$core$List$unzip = function (pairs) {
+	var step = F2(
+		function (_v0, _v1) {
+			var x = _v0.a;
+			var y = _v0.b;
+			var xs = _v1.a;
+			var ys = _v1.b;
+			return _Utils_Tuple2(
+				A2($elm$core$List$cons, x, xs),
+				A2($elm$core$List$cons, y, ys));
+		});
+	return A3(
+		$elm$core$List$foldr,
+		step,
+		_Utils_Tuple2(_List_Nil, _List_Nil),
+		pairs);
+};
+var $timjs$elm_collage$Collage$Layout$distances = function (col) {
+	var points = $timjs$elm_collage$Collage$Layout$handleBasic(col.basic);
+	var _v8 = $elm$core$List$unzip(
+		A2(
+			$elm$core$List$map,
+			$timjs$elm_collage$Collage$Core$apply(col),
+			points));
+	var xs = _v8.a;
+	var ys = _v8.b;
+	return {
+		toBottom: -A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$minimum(ys)),
+		toLeft: -A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$minimum(xs)),
+		toRight: A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$maximum(xs)),
+		toTop: A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$maximum(ys))
+	};
+};
+var $timjs$elm_collage$Collage$Layout$handleBasic = function (basic) {
+	handleBasic:
+	while (true) {
+		switch (basic.$) {
+			case 'Shape':
+				switch (basic.b.$) {
+					case 'Circle':
+						var _v1 = basic.a;
+						var thickness = _v1.b.thickness;
+						var r = basic.b.a;
+						var d = 2 * r;
+						return A2(
+							$timjs$elm_collage$Collage$Layout$handleBox,
+							thickness,
+							_Utils_Tuple2(d, d));
+					case 'Ellipse':
+						var _v2 = basic.a;
+						var thickness = _v2.b.thickness;
+						var _v3 = basic.b;
+						var rx = _v3.a;
+						var ry = _v3.b;
+						return A2(
+							$timjs$elm_collage$Collage$Layout$handleBox,
+							thickness,
+							_Utils_Tuple2(2 * rx, 2 * ry));
+					case 'Rectangle':
+						var _v4 = basic.a;
+						var thickness = _v4.b.thickness;
+						var _v5 = basic.b;
+						var w = _v5.a;
+						var h = _v5.b;
+						return A2(
+							$timjs$elm_collage$Collage$Layout$handleBox,
+							thickness,
+							_Utils_Tuple2(w, h));
+					case 'Polygon':
+						var _v6 = basic.a;
+						var thickness = _v6.b.thickness;
+						var ps = basic.b.a;
+						return A2($timjs$elm_collage$Collage$Layout$handlePoints, thickness, ps);
+					default:
+						var _v7 = basic.a;
+						var line = _v7.b;
+						var path = basic.b.a;
+						var $temp$basic = A2($timjs$elm_collage$Collage$Core$Path, line, path);
+						basic = $temp$basic;
+						continue handleBasic;
+				}
+			case 'Path':
+				var thickness = basic.a.thickness;
+				var cap = basic.a.cap;
+				var ps = basic.b.a;
+				return A2(
+					$timjs$elm_collage$Collage$Layout$handlePoints,
+					_Utils_eq(cap, $timjs$elm_collage$Collage$Flat) ? 0 : thickness,
+					ps);
+			case 'Text':
+				var dims = basic.a;
+				return A2($timjs$elm_collage$Collage$Layout$handleBox, 0, dims);
+			case 'Image':
+				var dims = basic.a;
+				return A2($timjs$elm_collage$Collage$Layout$handleBox, 0, dims);
+			case 'Html':
+				var dims = basic.a;
+				return A2($timjs$elm_collage$Collage$Layout$handleBox, 0, dims);
+			case 'Group':
+				var cols = basic.a;
+				return A2(
+					$timjs$elm_collage$Collage$Layout$handlePoints,
+					0,
+					$elm$core$List$concat(
+						A2(
+							$elm$core$List$map,
+							A2($elm$core$Basics$composeR, $timjs$elm_collage$Collage$Layout$distances, $timjs$elm_collage$Collage$Layout$unpack),
+							cols)));
+			default:
+				var back = basic.b;
+				return A2(
+					$timjs$elm_collage$Collage$Layout$handlePoints,
+					0,
+					$timjs$elm_collage$Collage$Layout$unpack(
+						$timjs$elm_collage$Collage$Layout$distances(back)));
+		}
+	}
+};
+var $timjs$elm_collage$Collage$Layout$height = function (col) {
+	var _v0 = $timjs$elm_collage$Collage$Layout$distances(col);
+	var toTop = _v0.toTop;
+	var toBottom = _v0.toBottom;
+	return toTop + toBottom;
+};
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
 var $timjs$elm_collage$Collage$Render$decodeCap = function (cap) {
 	switch (cap.$) {
@@ -11943,359 +12161,46 @@ var $timjs$elm_collage$Collage$Render$svgAbsolute = F2(
 						]))
 				]));
 	});
-var $timjs$elm_collage$Collage$Render$svgBox = F2(
-	function (_v0, collage) {
-		var width = _v0.a;
-		var height = _v0.b;
-		return A2(
-			$timjs$elm_collage$Collage$Render$svgAbsolute,
-			_Utils_Tuple2(width, height),
-			A2(
-				$timjs$elm_collage$Collage$shift,
-				_Utils_Tuple2(width / 2, (-height) / 2),
-				collage));
-	});
-var $timjs$elm_collage$Collage$Layout$Down = {$: 'Down'};
-var $elm$core$Basics$cos = _Basics_cos;
-var $elm$core$Basics$sin = _Basics_sin;
-var $timjs$elm_collage$Collage$Core$apply = function (_v0) {
-	var shift = _v0.shift;
-	var scale = _v0.scale;
-	var rotation = _v0.rotation;
-	var rotated = function (_v5) {
-		var x = _v5.a;
-		var y = _v5.b;
-		var s = $elm$core$Basics$sin(rotation);
-		var c = $elm$core$Basics$cos(rotation);
-		return _Utils_Tuple2((c * x) - (s * y), (s * x) + (c * y));
-	};
-	var _v1 = scale;
-	var sx = _v1.a;
-	var sy = _v1.b;
-	var scaled = function (_v4) {
-		var x = _v4.a;
-		var y = _v4.b;
-		return _Utils_Tuple2(sx * x, sy * y);
-	};
-	var _v2 = shift;
-	var dx = _v2.a;
-	var dy = _v2.b;
-	var shifted = function (_v3) {
-		var x = _v3.a;
-		var y = _v3.b;
-		return _Utils_Tuple2(x + dx, y + dy);
-	};
-	return A2(
-		$elm$core$Basics$composeL,
-		A2($elm$core$Basics$composeL, shifted, scaled),
-		rotated);
-};
-var $timjs$elm_collage$Collage$Layout$handlePoints = function (thickness) {
-	var thicken = function (_v0) {
-		var x = _v0.a;
-		var y = _v0.b;
-		var t = thickness / 2;
-		return _Utils_Tuple2(
-			(x < 0) ? (x - t) : (x + t),
-			(y < 0) ? (y - t) : (y + t));
-	};
-	return $elm$core$List$map(thicken);
-};
-var $timjs$elm_collage$Collage$Layout$handleBox = F2(
-	function (thickness, _v0) {
-		var w = _v0.a;
-		var h = _v0.b;
-		var y = h / 2;
-		var x = w / 2;
-		return A2(
-			$timjs$elm_collage$Collage$Layout$handlePoints,
-			thickness,
-			_List_fromArray(
-				[
-					_Utils_Tuple2(-x, -y),
-					_Utils_Tuple2(x, -y),
-					_Utils_Tuple2(x, y),
-					_Utils_Tuple2(-x, y)
-				]));
-	});
-var $elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$List$minimum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $timjs$elm_collage$Collage$Layout$unpack = function (_v0) {
-	var toTop = _v0.toTop;
-	var toBottom = _v0.toBottom;
-	var toRight = _v0.toRight;
+var $timjs$elm_collage$Collage$Layout$topLeft = function (col) {
+	var _v0 = $timjs$elm_collage$Collage$Layout$distances(col);
 	var toLeft = _v0.toLeft;
-	return _List_fromArray(
-		[
-			_Utils_Tuple2(-toLeft, -toBottom),
-			_Utils_Tuple2(toRight, -toBottom),
-			_Utils_Tuple2(toRight, toTop),
-			_Utils_Tuple2(-toLeft, toTop)
-		]);
+	var toTop = _v0.toTop;
+	return _Utils_Tuple2(-toLeft, toTop);
 };
-var $elm$core$List$unzip = function (pairs) {
-	var step = F2(
-		function (_v0, _v1) {
-			var x = _v0.a;
-			var y = _v0.b;
-			var xs = _v1.a;
-			var ys = _v1.b;
-			return _Utils_Tuple2(
-				A2($elm$core$List$cons, x, xs),
-				A2($elm$core$List$cons, y, ys));
-		});
-	return A3(
-		$elm$core$List$foldr,
-		step,
-		_Utils_Tuple2(_List_Nil, _List_Nil),
-		pairs);
+var $timjs$elm_collage$Collage$Layout$width = function (col) {
+	var _v0 = $timjs$elm_collage$Collage$Layout$distances(col);
+	var toLeft = _v0.toLeft;
+	var toRight = _v0.toRight;
+	return toLeft + toRight;
 };
-var $timjs$elm_collage$Collage$Layout$distances = function (col) {
-	var points = $timjs$elm_collage$Collage$Layout$handleBasic(col.basic);
-	var _v8 = $elm$core$List$unzip(
-		A2(
-			$elm$core$List$map,
-			$timjs$elm_collage$Collage$Core$apply(col),
-			points));
-	var xs = _v8.a;
-	var ys = _v8.b;
-	return {
-		toBottom: -A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			$elm$core$List$minimum(ys)),
-		toLeft: -A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			$elm$core$List$minimum(xs)),
-		toRight: A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			$elm$core$List$maximum(xs)),
-		toTop: A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			$elm$core$List$maximum(ys))
-	};
-};
-var $timjs$elm_collage$Collage$Layout$handleBasic = function (basic) {
-	handleBasic:
-	while (true) {
-		switch (basic.$) {
-			case 'Shape':
-				switch (basic.b.$) {
-					case 'Circle':
-						var _v1 = basic.a;
-						var thickness = _v1.b.thickness;
-						var r = basic.b.a;
-						var d = 2 * r;
-						return A2(
-							$timjs$elm_collage$Collage$Layout$handleBox,
-							thickness,
-							_Utils_Tuple2(d, d));
-					case 'Ellipse':
-						var _v2 = basic.a;
-						var thickness = _v2.b.thickness;
-						var _v3 = basic.b;
-						var rx = _v3.a;
-						var ry = _v3.b;
-						return A2(
-							$timjs$elm_collage$Collage$Layout$handleBox,
-							thickness,
-							_Utils_Tuple2(2 * rx, 2 * ry));
-					case 'Rectangle':
-						var _v4 = basic.a;
-						var thickness = _v4.b.thickness;
-						var _v5 = basic.b;
-						var w = _v5.a;
-						var h = _v5.b;
-						return A2(
-							$timjs$elm_collage$Collage$Layout$handleBox,
-							thickness,
-							_Utils_Tuple2(w, h));
-					case 'Polygon':
-						var _v6 = basic.a;
-						var thickness = _v6.b.thickness;
-						var ps = basic.b.a;
-						return A2($timjs$elm_collage$Collage$Layout$handlePoints, thickness, ps);
-					default:
-						var _v7 = basic.a;
-						var line = _v7.b;
-						var path = basic.b.a;
-						var $temp$basic = A2($timjs$elm_collage$Collage$Core$Path, line, path);
-						basic = $temp$basic;
-						continue handleBasic;
-				}
-			case 'Path':
-				var thickness = basic.a.thickness;
-				var cap = basic.a.cap;
-				var ps = basic.b.a;
-				return A2(
-					$timjs$elm_collage$Collage$Layout$handlePoints,
-					_Utils_eq(cap, $timjs$elm_collage$Collage$Flat) ? 0 : thickness,
-					ps);
-			case 'Text':
-				var dims = basic.a;
-				return A2($timjs$elm_collage$Collage$Layout$handleBox, 0, dims);
-			case 'Image':
-				var dims = basic.a;
-				return A2($timjs$elm_collage$Collage$Layout$handleBox, 0, dims);
-			case 'Html':
-				var dims = basic.a;
-				return A2($timjs$elm_collage$Collage$Layout$handleBox, 0, dims);
-			case 'Group':
-				var cols = basic.a;
-				return A2(
-					$timjs$elm_collage$Collage$Layout$handlePoints,
-					0,
-					$elm$core$List$concat(
-						A2(
-							$elm$core$List$map,
-							A2($elm$core$Basics$composeR, $timjs$elm_collage$Collage$Layout$distances, $timjs$elm_collage$Collage$Layout$unpack),
-							cols)));
-			default:
-				var back = basic.b;
-				return A2(
-					$timjs$elm_collage$Collage$Layout$handlePoints,
-					0,
-					$timjs$elm_collage$Collage$Layout$unpack(
-						$timjs$elm_collage$Collage$Layout$distances(back)));
-		}
-	}
-};
-var $timjs$elm_collage$Collage$Layout$envelope = F2(
-	function (dir, col) {
-		var _v0 = $timjs$elm_collage$Collage$Layout$distances(col);
-		var toTop = _v0.toTop;
-		var toBottom = _v0.toBottom;
-		var toLeft = _v0.toLeft;
-		var toRight = _v0.toRight;
-		switch (dir.$) {
-			case 'Up':
-				return toTop;
-			case 'Down':
-				return toBottom;
-			case 'Right':
-				return toRight;
-			default:
-				return toLeft;
-		}
-	});
-var $timjs$elm_collage$Collage$Layout$Left = {$: 'Left'};
-var $timjs$elm_collage$Collage$Layout$Right = {$: 'Right'};
-var $timjs$elm_collage$Collage$Layout$Up = {$: 'Up'};
-var $timjs$elm_collage$Collage$Layout$facing = function (dir) {
-	switch (dir.$) {
-		case 'Up':
-			return $timjs$elm_collage$Collage$Layout$Down;
-		case 'Down':
-			return $timjs$elm_collage$Collage$Layout$Up;
-		case 'Right':
-			return $timjs$elm_collage$Collage$Layout$Left;
-		default:
-			return $timjs$elm_collage$Collage$Layout$Right;
-	}
-};
-var $timjs$elm_collage$Collage$Layout$place = F3(
-	function (dir, a, b) {
-		var len = A2($timjs$elm_collage$Collage$Layout$envelope, dir, a) + A2(
-			$timjs$elm_collage$Collage$Layout$envelope,
-			$timjs$elm_collage$Collage$Layout$facing(dir),
-			b);
-		var move = function () {
-			switch (dir.$) {
-				case 'Up':
-					return _Utils_Tuple2(0, len);
-				case 'Down':
-					return _Utils_Tuple2(0, -len);
-				case 'Right':
-					return _Utils_Tuple2(len, 0);
-				default:
-					return _Utils_Tuple2(-len, 0);
-			}
-		}();
-		return A2($timjs$elm_collage$Collage$shift, move, b);
-	});
-var $timjs$elm_collage$Collage$Layout$stack = $timjs$elm_collage$Collage$group;
-var $timjs$elm_collage$Collage$Layout$beside = F3(
-	function (dir, a, b) {
-		return $timjs$elm_collage$Collage$Layout$stack(
-			_List_fromArray(
-				[
-					a,
-					A3($timjs$elm_collage$Collage$Layout$place, dir, a, b)
-				]));
-	});
-var $timjs$elm_collage$Collage$broken = F3(
-	function (dashes, thickness, fill) {
-		return _Utils_update(
-			$timjs$elm_collage$Collage$defaultLineStyle,
-			{dashPattern: dashes, fill: fill, thickness: thickness});
-	});
-var $timjs$elm_collage$Collage$solid = $timjs$elm_collage$Collage$broken(_List_Nil);
-var $timjs$elm_collage$Collage$Core$Transparent = {$: 'Transparent'};
-var $timjs$elm_collage$Collage$transparent = $timjs$elm_collage$Collage$Core$Transparent;
-var $timjs$elm_collage$Collage$invisible = A2($timjs$elm_collage$Collage$solid, 0, $timjs$elm_collage$Collage$transparent);
-var $timjs$elm_collage$Collage$Core$Rectangle = F3(
-	function (a, b, c) {
-		return {$: 'Rectangle', a: a, b: b, c: c};
-	});
-var $timjs$elm_collage$Collage$roundedRectangle = $timjs$elm_collage$Collage$Core$Rectangle;
-var $timjs$elm_collage$Collage$rectangle = F2(
-	function (w, h) {
-		return A3($timjs$elm_collage$Collage$roundedRectangle, w, h, 0);
-	});
-var $timjs$elm_collage$Collage$Core$Shape = F2(
-	function (a, b) {
-		return {$: 'Shape', a: a, b: b};
-	});
-var $timjs$elm_collage$Collage$styled = function (style) {
+var $timjs$elm_collage$Collage$Render$svg = function (collage) {
 	return A2(
-		$elm$core$Basics$composeL,
-		$timjs$elm_collage$Collage$Core$collage,
-		$timjs$elm_collage$Collage$Core$Shape(style));
+		$timjs$elm_collage$Collage$Render$svgAbsolute,
+		_Utils_Tuple2(
+			$timjs$elm_collage$Collage$Layout$width(collage),
+			$timjs$elm_collage$Collage$Layout$height(collage)),
+		A2($timjs$elm_collage$Collage$Layout$align, $timjs$elm_collage$Collage$Layout$topLeft, collage));
 };
-var $timjs$elm_collage$Collage$Layout$spacer = F2(
-	function (w, h) {
-		return A2(
-			$timjs$elm_collage$Collage$styled,
-			_Utils_Tuple2($timjs$elm_collage$Collage$transparent, $timjs$elm_collage$Collage$invisible),
-			A2($timjs$elm_collage$Collage$rectangle, w, h));
+var $author$project$Contour$viewGridFunction = F3(
+	function (style, gridFun, levels) {
+		return $timjs$elm_collage$Collage$Render$svg(
+			A3($author$project$Contour$drawGridFunction, style, gridFun, levels));
 	});
-var $timjs$elm_collage$Collage$Layout$empty = A2($timjs$elm_collage$Collage$Layout$spacer, 0, 0);
-var $timjs$elm_collage$Collage$Layout$vertical = A2(
-	$elm$core$List$foldr,
-	$timjs$elm_collage$Collage$Layout$beside($timjs$elm_collage$Collage$Layout$Down),
-	$timjs$elm_collage$Collage$Layout$empty);
 var $author$project$Plot$allContours = function (model) {
-	return A2(
-		$timjs$elm_collage$Collage$Render$svgBox,
-		_Utils_Tuple2(2 * $author$project$Plot$myWidth, 2 * $author$project$Plot$myHeight),
-		$timjs$elm_collage$Collage$Layout$vertical(
-			_List_fromArray(
-				[
-					A4($author$project$Plot$contours, model, model.levelMin, model.levelMax, model.contours),
-					$timjs$elm_collage$Collage$rendered(
-					$timjs$elm_collage$Collage$Text$fromString('Hello'))
-				])));
+	var style = $author$project$Contour$defaultStyle;
+	var steps = model.contours;
+	var min = model.levelMin;
+	var max = model.levelMax;
+	var gridFun = $author$project$Plot$modelGridFunction(model);
+	var delta = (max - min) / steps;
+	var toLevel = function (i) {
+		return min + (i * delta);
+	};
+	var levels = A2(
+		$elm$core$List$map,
+		toLevel,
+		A2($elm$core$List$range, 0, model.contours - 1));
+	return A3($author$project$Contour$viewGridFunction, style, gridFun, levels);
 };
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$select = _VirtualDom_node('select');

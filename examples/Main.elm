@@ -9,8 +9,8 @@ type alias Model =
     {}
 
 
-type Msg
-    = Boolean
+type alias Msg =
+    Bool
 
 
 view : Model -> Html Msg
@@ -34,6 +34,7 @@ update _ model =
     model
 
 
+main : Program () {} Msg
 main =
     Browser.sandbox
         { init = {}
